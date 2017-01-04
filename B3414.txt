@@ -1,0 +1,97 @@
+CREATE DATABASE LINK tplink CONNECT TO hcburca IDENTIFIED BY mdporacle USING 'DB1';
+
+DROP DATABASE LINK tplink;
+Select * from Ryori.Clients@tplink;
+
+CREATE DATABASE LINK linkES CONNECT TO hcburca IDENTIFIED BY mdporacle USING 'DB3';
+Select * from lpoisse.Produits@linkES;
+
+-- creates fragmented clients table 
+CREATE table Clients_AM as (
+  Select * from Ryori.Clients@tplink
+  where Pays in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+  'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+  'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+  'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+  'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+  'Venezuela')
+  );
+
+
+CREATE TABLE Employes as (
+  Select * from Ryori.Employes@tplink
+);
+
+
+CREATE table Commandes_AM as(
+  Select com.* from Ryori.Commandes@tplink com, Ryori.Clients@tplink cli 
+  where com.code_client = cli.code_client and cli.pays in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+  'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+  'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+  'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+  'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+  'Venezuela')
+);
+
+CREATE table Details_Commandes_AM as(
+  Select detcom.* from Ryori.Details_Commandes@tplink detcom, Commandes_AM com 
+  where detcom.no_commande = com.no_commande
+);
+
+CREATE table Stock_AM as(
+  Select * from Ryori.Stock@tplink
+  where Pays in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+  'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+  'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+  'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+  'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+  'Venezuela')
+);
+
+-- droits lectures autres sites pour la table stock
+
+GRANT select on stock_am to lpoisse; 
+GRANT select on stock_am to zvergne;
+Grant select on stock_am to hhamelin;
+Grant select on stock_am to cpottiez;
+
+-- droits lectures autres sites pour la table employes
+
+GRANT select on employes to lpoisse; 
+GRANT select on employes to zvergne;
+Grant select on employes to hhamelin;
+Grant select on employes to cpottiez;
+
+-- Contraintes primary key
+
+ALTER TABLE clients_am ADD CONSTRAINT pkClient PRIMARY KEY(code_client);
+ALTER TABLE commandes_am ADD CONSTRAINT pkCommande PRIMARY KEY (no_commande);
+ALTER TABLE employes ADD CONSTRAINT pkEmploye PRIMARY KEY (no_employe);
+ALTER TABLE details_commandes_am ADD CONSTRAINT pkDetails PRIMARY KEY (no_commande, ref_produit);
+ALTER TABLE stock_am ADD CONSTRAINT pkStock PRIMARY KEY (ref_produit, pays);
+
+-- Contraintes foreign key
+
+ALTER TABLE employes ADD CONSTRAINT fkEmployeEmploye FOREIGN KEY (rend_Compte) REFERENCES Employes(no_employe);
+ALTER TABLE commandes_am ADD CONSTRAINT fkCommandesClients FOREIGN KEY (code_client) REFERENCES Clients_am(code_client);
+ALTER TABLE commandes_am ADD CONSTRAINT fkCommandesEmployes FOREIGN KEY (no_employe) REFERENCES Employes(no_employe);
+ALTER TABLE details_commandes_am ADD CONSTRAINT fkDetailsCommandesCommandes FOREIGN KEY (no_commande) REFERENCES Commandes_am(no_commande);
+
+CREATE OR REPLACE TRIGGER FKDETAILSCOMMANDESPRODUITS 
+BEFORE INSERT OR UPDATE ON details_commandes_am 
+FOR EACH ROW
+DECLARE
+
+  refprod$ details_commandes_am.ref_produit%TYPE;
+  
+BEGIN
+  Select ref_produit into refprod$ 
+  From lpoisse.produits@linkES
+  Where ref_produit = :New.ref_produit;
+  
+  EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        Raise_application_error(-20001, 'Le produit n''existe pas');
+END;
+/
+INSERT INTO details_commandes_am VALUES (10594, 1000, 0, 1, 0.5);
