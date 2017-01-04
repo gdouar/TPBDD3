@@ -1,0 +1,153 @@
+-- création de la table pour les clients de l'europe du nord
+create table clientsEN as 
+select *
+from ryori.clients
+where pays='Suede' or pays='Norvege' or pays='Danemark' or pays='Finlande'  or pays='Belgique' or pays='Irlande' 
+or pays='Pologne' or pays='Royaume-Uni' or pays='Allemagne'
+;
+
+-- création de la table pour les clients d'un nouveau site
+create table clientsOI as 
+select *
+from ryori.clients
+where pays='babla'
+;
+
+-- création table des commandes pour les clients de l'europe du nord
+create table commandesEN as
+select r.*
+from clientsEN c, ryori.commandes r
+where c.code_client=r.code_client
+;
+
+-- création table des commandes pour les clients d'un nouveau site
+create table commandesOI as
+select r.*
+from clientsOI c, ryori.commandes r
+where c.code_client=r.code_client'
+;
+
+-- création table de détails des commande pour les clients de l'europe du nord
+create table details_commandesEN as
+select r.*
+from commandesEN c, ryori.details_commandes r
+where c.no_commande=r.no_commande 
+;
+
+-- création table de détails des commande pour les clients d'un nouveau site
+create table details_commandesOI as
+select r.*
+from commandesOI c, ryori.details_commandes r
+where c.no_commande=r.no_commande 
+;
+
+--création table de stock des sites de l'europe du nord
+create table stockEN as
+select distinct r.*
+from clientsEN c, ryori.stock r
+where c.pays=r.pays
+;
+
+--création table de stock des nouveaux sites
+create table stockOI as
+select distinct r.*
+from clientsOI c, ryori.stock r
+where c.pays=r.pays
+;
+
+-- table fournisseurs
+create table fournisseurs as
+select *
+from ryori.fournisseurs
+;
+
+-- donne les droits de lecture aux autres membres du groupe
+GRANT select on stockEN to lpoisse;
+GRANT select on stockEN to zvergne;
+GRANT select on stockEN to hcburca;
+GRANT select on stockEN to jcharlesni;
+GRANT select on stockEN to hhamelin;
+
+GRANT select on stockOI to lpoisse;
+GRANT select on stockOI to zvergne;
+GRANT select on stockOI to hcburca;
+GRANT select on stockOI to jcharlesni;
+GRANT select on stockOI to hhamelin;
+
+GRANT select on fournisseurs to lpoisse;
+GRANT select on fournisseurs to zvergne;
+GRANT select on fournisseurs to hcburca;
+GRANT select on fournisseurs to jcharlesni;
+GRANT select on fournisseurs to hhamelin;
+ 
+-- contraintes de clé primaire
+ALTER TABLE ClientsEN 
+  ADD CONSTRAINT ClientsENPk PRIMARY KEY (code_client);
+  
+ALTER TABLE ClientsOI 
+  ADD CONSTRAINT ClientsOIPk PRIMARY KEY (code_client);
+  
+ALTER TABLE commandesEN 
+  ADD CONSTRAINT CommandesENPk PRIMARY KEY (no_commande);
+  
+ALTER TABLE commandesOI 
+  ADD CONSTRAINT CommandesOIPk PRIMARY KEY (no_commande);
+
+ALTER TABLE details_commandesEN 
+  ADD CONSTRAINT Details_commandesENPk PRIMARY KEY (no_commande, ref_produit);
+
+ALTER TABLE details_commandesOI 
+  ADD CONSTRAINT Details_commandesOIPk PRIMARY KEY (no_commande, ref_produit);
+  
+ALTER TABLE fournisseurs 
+  ADD CONSTRAINT FournisseursPk PRIMARY KEY (no_fournisseur);
+  
+ALTER TABLE stockEN 
+  ADD CONSTRAINT StockENPk PRIMARY KEY (ref_produit, pays);
+  
+ALTER TABLE stockOI 
+  ADD CONSTRAINT StockOIPk PRIMARY KEY (ref_produit, pays);
+ 
+ 
+--contraintes de clé étrangère 
+  alter table commandesEN
+add constraint commandesENFk foreign key (code_client) references clientsEN(code_client) on delete cascade;
+  
+ALTER TABLE commandesOI
+  ADD CONSTRAINT commandesOIFk FOREIGN KEY (CODE_CLIENT) REFERENCES CLIENTSOI(CODE_CLIENT) on delete cascade;
+  
+
+--création de lien vers les autres bds 
+  create database link LinkToDBES
+connect to hhamelin
+identified by mdporacle
+using 'DB3'
+;
+
+  create database link LinkToDBUS
+connect to hhamelin
+identified by mdporacle
+using 'DB4'
+;
+
+-- trigger pour vérifier la présence de l'employé à l'insertion ou maj dans CommandeEN
+CREATE OR REPLACE TRIGGER trg_check_employes
+  BEFORE INSERT OR UPDATE ON CommandesEN
+  FOR EACH ROW
+  declare
+  Employee number(6);
+BEGIN
+  select e.no_employe
+  into employee
+  from hcburca.Employes@LinkToDBUS e
+  where e.no_employe=:new.no_employe;
+  
+  EXCEPTION
+      When NO_DATA_FOUND THEN
+    RAISE_APPLICATION_ERROR( -20001, 
+          'Invalid no_employe : There is no Employe with this no_employe in the company !');
+
+END
+;
+
+
