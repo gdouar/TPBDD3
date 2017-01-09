@@ -1,3 +1,6 @@
+/*
+	Trigger appelé lors d'une action LMD sur la vue 'Stock'
+*/
 create or replace TRIGGER modify_Stocks INSTEAD OF UPDATE OR INSERT or delete ON Stock
 FOR EACH ROW
 BEGIN
@@ -14,7 +17,8 @@ BEGIN
   end if;
   /*
   
-                  WIP : il faut pouvoir identifier les colonnes ayant été mises à jour...
+					<!>   TODO:  WIP, il faut pouvoir identifier les colonnes ayant été mises à jour...   <!>
+					
   
   IF UPDATING THEN          -- Modification à contrôler
      IF NOT (:NEW.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
@@ -33,7 +37,7 @@ BEGIN
     
   END IF;*/
   
- IF deleting THEN       --Suppression standard
+ IF deleting THEN       --Suppression à vérifier ; on ne peut pas supprimer un stock ne faisant pas partie de la région du site (gestion du stock LOCAL seulement)
     IF NOT (:old.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
     'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
     'Autriche', 'Suisse')) THEN
@@ -42,4 +46,147 @@ BEGIN
       delete from stockes where ref_produit = :old.ref_produit AND pays = :old.pays;
     end if;
  end if;
+END;
+/
+
+/*
+	Trigger appelé lors d'une action LMD sur la vue 'Clients'
+*/
+create or replace TRIGGER modify_Clients INSTEAD OF UPDATE OR INSERT or delete ON Clients
+FOR EACH ROW
+BEGIN
+
+  IF INSERTING  THEN          --Insertion à contrôler : on ne peut pas ajouter un client non local, car la gestion de ces clients ne dépend pas de l'application SellIt Europe du Sud
+     IF NOT (:NEW.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+    'Autriche', 'Suisse')) THEN
+        RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié n''a pas été reconnu.');
+    else
+      INSERT INTO Clientses 
+      VALUES (:new.code_client,:new.societe, :new.adresse, :new.ville, :new.code_postal, :new.pays, :new.telephone, :new.fax);
+    end if;  
+  end if;
+  
+ /*
+	TODO : Prévoir traitement des requêtes de type UPDATE
+*/
+  
+ IF deleting THEN       --Suppression standard, on ne peut pas supprimer un client non local, car la gestion de ces clients ne dépend pas de l'application SellIt Europe du Sud
+    IF NOT (:old.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+    'Autriche', 'Suisse')) THEN
+        RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié n''a pas été reconnu.');
+    else
+      delete from clientses where code_client = :old.code_client;
+    end if;
+ end if;
+END;
+/
+
+/*
+	Trigger appelé lors d'une action LMD sur la vue 'Commandes'
+*/
+create or replace TRIGGER modify_Commandes INSTEAD OF UPDATE OR INSERT or delete ON Commandes
+FOR EACH ROW
+DECLARE
+clientCountry Clients.pays%Type;
+BEGIN
+	
+  IF INSERTING  THEN          --Insertion à contrôler : on ne peut pas ajouter des commandes d'un client étranger (on ne travaille que sur les clients locaux)
+	
+	SELECT pays INTO clientCountry
+	FROM Clients
+	WHERE CODE_CLIENT = :new.CODE_CLIENT;
+	
+     IF NOT (clientCountry in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+    'Autriche', 'Suisse')) THEN
+        RAISE_APPLICATION_ERROR(-20009, 'Erreur : le client de la commande renseignée ne se trouve pas dans la bonne région.');
+    else
+      INSERT INTO Commandeses 
+      VALUES (:new.NO_COMMANDE, :new.CODE_CLIENT, :new.NO_EMPLOYE, :new.DATE_COMMANDE, :new.DATE_ENVOI, :new.PORT);
+    end if;  
+  end if;
+  
+ /*
+	TODO : Prévoir traitement des requêtes de type UPDATE
+*/
+  
+ IF deleting THEN       --Suppression à vérifier : on ne peut pas supprimer des commandes d'un client étranger (on ne travaille que sur les clients locaux)
+ 	
+	SELECT pays INTO clientCountry
+	FROM Clients
+	WHERE CODE_CLIENT = :old.CODE_CLIENT;
+ 
+    IF NOT (clientCountry in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+    'Autriche', 'Suisse')) THEN
+        RAISE_APPLICATION_ERROR(-20009, 'Erreur : le client de la commande renseignée ne se trouve pas dans la bonne région.');
+    else
+      delete from Commandeses where no_commande = :old.no_commande;
+    end if;
+ end if;
+ 
+ 
+ EXCEPTION
+  WHEN NO_DATA_FOUND THEN 
+    RAISE_APPLICATION_ERROR(-200010, 'Erreur : Le client associé à la commande est inconnu.');		--Interception de l'erreur NO_DATA_FOUND (joue le rôle de la contrainte d'intégrité)
+ 
+END;
+/
+
+
+/*
+	Trigger appelé lors d'une action LMD sur la vue 'DétailsCommandes'
+*/
+create or replace TRIGGER modify_DetailsCommandes INSTEAD OF UPDATE OR INSERT or delete ON details_commandes
+FOR EACH ROW
+DECLARE
+clientCountry Clients.pays%Type;
+BEGIN
+	
+  IF INSERTING  THEN          --Insertion à contrôler : on ne peut pas ajouter des détails de commandes d'un client étranger (on ne travaille que sur les clients locaux)
+	
+	SELECT c.pays INTO clientCountry
+	FROM Commande NATURAL JOIN Clients c
+	WHERE CODE_CLIENT = (
+		SELECT CODE_CLIENT FROM Commandes c2 WHERE c2.NO_COMMANDE = :new.NO_COMMANDE
+	);
+	
+     IF NOT (clientCountry in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+    'Autriche', 'Suisse')) THEN
+        RAISE_APPLICATION_ERROR(-20009, 'Erreur : le client de la commande renseignée ne se trouve pas dans la bonne région.');
+    else
+      INSERT INTO DETAILS_Commandeses 
+      VALUES (:new.NO_COMMANDE, :new.REF_PRODUIT, :new.PRIX_UNITAIRE, :new.QUANTITE, :new.REMISE);
+    end if;  
+  end if;
+  
+ /*
+	TODO : Prévoir traitement des requêtes de type UPDATE
+*/
+  
+ IF deleting THEN       --Suppression à vérifier : on ne peut pas supprimer des détails de commandes d'un client étranger (on ne travaille que sur les clients locaux)
+ 	
+	SELECT c.pays INTO clientCountry
+	FROM Commande NATURAL JOIN Clients c
+	WHERE CODE_CLIENT = (
+		SELECT CODE_CLIENT FROM Commandes c2 WHERE c2.NO_COMMANDE = :old.NO_COMMANDE
+	);
+ 
+    IF NOT (clientCountry in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+    'Autriche', 'Suisse')) THEN
+        RAISE_APPLICATION_ERROR(-20009, 'Erreur : le client de la commande renseignée ne se trouve pas dans la bonne région.');
+    else
+      delete from DETAILS_Commandeses where NO_COMMANDE = :old.NO_COMMANDE AND REF_PRODUIT=:old.REF_PRODUIT;
+    end if;
+ end if;
+ 
+ 
+ EXCEPTION
+  WHEN NO_DATA_FOUND THEN 
+    RAISE_APPLICATION_ERROR(-200010, 'Erreur : Le client associé à la commande est inconnu.');		--Interception de l'erreur NO_DATA_FOUND (joue le rôle de la contrainte d'intégrité)
+ 
 END;
