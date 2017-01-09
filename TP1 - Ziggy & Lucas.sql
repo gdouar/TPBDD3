@@ -7,7 +7,7 @@ CREATE DATABASE LINK dbLinkUS CONNECT TO lpoisse IDENTIFIED BY mdporacle USING '
 
 
 /*
-  CrÃ©ation de la table clients de l'europe du Sud AVEC Autriche/Suisse
+  Création de la table clients de l'europe du Sud AVEC Autriche/Suisse
 */
 CREATE TABLE clientsES as 
 (SELECT * FROM ryori.clients@dblinkMain 
@@ -15,7 +15,7 @@ WHERE pays IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie'
 
 select * from cpottiez.fournisseurs@dblinkMain;
 /*
-  CrÃ©ation de la table commandes de l'europe du Sud
+  Création de la table commandes de l'europe du Sud
 */
 CREATE TABLE commandesES as 
 (
@@ -26,7 +26,7 @@ WHERE cli.pays IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Ita
 ));
 
 /*
-  CrÃ©ation de la table dÃ©tails des commandes de l'europe du Sud
+  Création de la table détails des commandes de l'europe du Sud
 */
 CREATE TABLE details_commandesES as 
 (
@@ -38,7 +38,7 @@ WHERE cli.pays IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Ita
 
 
 /*
-  CrÃ©ation de la table dÃ©tails des commandes de l'europe du Sud
+  Création de la table détails des commandes de l'europe du Sud
 */
 CREATE TABLE stockES as 
 (
@@ -46,21 +46,21 @@ SELECT * from ryori.stock@dblinkMain
 WHERE pays IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse'));
 
 /*
-  CrÃ©ation de la table Produits Ã  partir de l'originale 
+  Création de la table Produits à partir de l'originale 
 */
 CREATE TABLE produits as 
 (
 SELECT * from ryori.produits@dblinkMain);
 
 /*
-  CrÃ©ation de la table CatÃ©gories Ã  partir de l'originale 
+  Création de la table Catégories à partir de l'originale 
 */
 CREATE TABLE CATEGORIES as 
 (
 SELECT * from ryori.CATEGORIES@dblinkMain);
 
 /*
-  Permissions accordÃ©es : STOCKES (lecture seule depuis les applications externes)
+  Permissions accordées : STOCKES (lecture seule depuis les applications externes)
 */
 GRANT SELECT, update, insert, delete ON stockES to cpottiez;
 GRANT SELECT, update, insert, delete ON stockES to hhamelin;
@@ -69,7 +69,7 @@ GRANT SELECT, update, insert, delete ON stockES to jcharlesni;
 GRANT SELECT, update, insert, delete ON stockES to hcburca;
 
 /*
-  Permissions accordÃ©es : PRODUITS (lecture seule depuis les applications externes)
+  Permissions accordées : PRODUITS (lecture seule depuis les applications externes)
 */
 GRANT select ON produits to cpottiez;
 GRANT select ON produits to hhamelin;
@@ -78,7 +78,7 @@ GRANT select ON produits to jcharlesni;
 GRANT select ON produits to hcburca;
 
 /*
-  Permissions accordÃ©es : CATEGORIES (lecture seule depuis les applications externes)
+  Permissions accordées : CATEGORIES (lecture seule depuis les applications externes)
 */
 GRANT select ON categories to cpottiez;
 GRANT select ON categories to hhamelin;
@@ -87,7 +87,7 @@ GRANT select ON categories to jcharlesni;
 GRANT select ON categories to hcburca;
 
 /*
-  Permissions accordÃ©es : DETAILS_COMMANDESES (lecture seule depuis les applications externes)
+  Permissions accordées : DETAILS_COMMANDESES (lecture seule depuis les applications externes)
 */
 GRANT SELECT, update, insert, delete ON details_commandeses to cpottiez;
 GRANT SELECT, update, insert, delete ON details_commandeses to hhamelin;
@@ -96,7 +96,7 @@ GRANT SELECT, update, insert, delete ON details_commandeses to jcharlesni;
 GRANT SELECT, update, insert, delete ON details_commandeses to hcburca;
 
 /*
-  Permissions accordÃ©es : COMMANDESES (lecture seule depuis les applications externes)
+  Permissions accordées : COMMANDESES (lecture seule depuis les applications externes)
 */
 GRANT SELECT, update, insert, delete on commandeses TO cpottiez;
 GRANT SELECT, update, insert, delete on commandeses TO hhamelin;
@@ -105,7 +105,7 @@ GRANT SELECT, update, insert, delete on commandeses TO jcharlesni;
 GRANT SELECT, update, insert, delete on commandeses TO hcburca;
 
 /*
-  Permissions accordÃ©es : CLIENTSES (lecture seule depuis les applications externes)
+  Permissions accordées : CLIENTSES (lecture seule depuis les applications externes)
 */
 GRANT SELECT, update, insert, delete on clientses TO cpottiez;
 GRANT SELECT, update, insert, delete on clientses TO hhamelin;
@@ -114,7 +114,7 @@ GRANT SELECT, update, insert, delete on clientses TO jcharlesni;
 GRANT SELECT, update, insert, delete on clientses TO hcburca;
 
 /*
-  Contraintes : clÃ©s primaires
+  Contraintes : clés primaires
 */
 desc clientsES;
 ALTER TABLE clientsES ADD CONSTRAINT pk_clientsES PRIMARY KEY (CODE_CLIENT);
@@ -151,7 +151,7 @@ ALTER TABLE stockes ADD CONSTRAINT chk_stockespays CHECK (pays IS NOT NULL);
 /
 
 /*
-  Trigger : "clÃ©s Ã©trangÃ¨res"/prÃ©dicats de vÃ©rification Ã  l'insertion
+  Trigger : "clés étrangères"/prédicats de vérification à l'insertion
 */
 CREATE OR REPLACE TRIGGER chkInsert_Commandes BEFORE INSERT OR UPDATE ON CommandesES
 FOR EACH ROW
@@ -165,12 +165,12 @@ BEGIN
   
 EXCEPTION
   WHEN NO_DATA_FOUND THEN 
-    RAISE_APPLICATION_ERROR(-20001, 'Erreur : tout employÃ© rÃ©fÃ©rencÃ© doit exister dans la table des employÃ©s');
+    RAISE_APPLICATION_ERROR(-20001, 'Erreur : tout employé référencé doit exister dans la table des employés');
 END;
 /
 desc details_commandeses;
 /*
-  FK possibles pour assurer les clÃ©s Ã©trangÃ¨res locales
+  FK possibles pour assurer les clés étrangères locales
 */
 
 alter table details_commandeses add constraint fk_detailscmdesproduits foreign key (REF_PRODUIT) REFERENCES Produits;
@@ -180,7 +180,7 @@ alter table stockES add constraint fk_stockESproduits foreign key (REF_PRODUIT) 
 
 
 /*
-  CrÃ©ation des vues
+  Création des vues
 */
 -- Vue "Stock"
 CREATE OR REPLACE VIEW Stock
@@ -195,8 +195,6 @@ SELECT * FROM hcburca.stock_am@dbLinkUS
 );
 
 SELECT * FROM Stock;
-
-/*   <!> A VALIDER QUAND PERMISSIONS ACCORDEES <!>  */
 
 --Vue 'Clients'
 CREATE OR REPLACE VIEW Clients
@@ -235,18 +233,35 @@ UNION
 SELECT * FROM hcburca.Details_Commandes_AM@dbLinkUS
 );
 
+--Vue fournisseurs
+CREATE OR REPLACE VIEW Fournisseurs
+AS
+(SELECT * FROM cpottiez.fournisseurs@dblinkmain);
+
+
+
+select * from clients;
+select * from stock;
+select * from produits;
+select * from details_commandes;
+select * from commandes;
+select * from fournisseurs;
+select * from categories;
 
 --  <!>  A COMPILER QUAND PERMISSIONS ACCORDEES <!>
+desc produits;
+
+
 
 /*
-  Trigger : vÃ©rifie si le fournisseur insÃ©rÃ© dans la table Produits est bien rÃ©fÃ©rencÃ©
-  VÃ©rifie au cours de la suppression d'un produit que celui-ci n'est pas dÃ©jÃ  prÃ©sent dans une des tables DÃ©tailsCommande ou stocks
+  Trigger : vérifie si le fournisseur inséré dans la table Produits est bien référencé
+  Vérifie au cours de la suppression d'un produit que celui-ci n'est pas déjà présent dans une des tables DétailsCommande ou stocks
 */
 CREATE OR REPLACE TRIGGER chk_Produits BEFORE INSERT OR UPDATE OR DELETE ON Produits
 FOR EACH ROW
 DECLARE 
-idFourn number; --Id du fournisseur renseignÃ© Ã  vÃ©rifier
-any_rows_found NUMBER;  --variable indiquant si un produit Ã  supprimer existe dans une table secondaire
+idFourn number; --Id du fournisseur renseigné à vérifier
+any_rows_found NUMBER;  --variable indiquant si un produit à supprimer existe dans une table secondaire
 
 BEGIN
 	IF INSERTING OR UPDATING THEN 
@@ -262,7 +277,7 @@ BEGIN
     where ref_produit = :NEW.REF_PRODUIT;
     
     IF any_rows_found <> 0 THEN
-      raise_application_error(-20002, 'Erreur : le produit Ã  supprimer est dÃ©jÃ  rÃ©fÃ©rencÃ© dans la table DÃ©tailsCommandes en Europe du Nord');
+      raise_application_error(-20002, 'Erreur : le produit à supprimer est déjà référencé dans la table DétailsCommandes en Europe du Nord');
     end if;
     
     SELECT count(*) INTO any_rows_found
@@ -270,7 +285,7 @@ BEGIN
     WHERE ref_produit = :NEW.REF_PRODUIT;
     
     IF any_rows_found <> 0 THEN
-      raise_application_error(-20003, 'Erreur : le produit Ã  supprimer est dÃ©jÃ  rÃ©fÃ©rencÃ© dans la table DÃ©tailsCommandes pour un pays inconnu');
+      raise_application_error(-20003, 'Erreur : le produit à supprimer est déjà référencé dans la table DétailsCommandes pour un pays inconnu');
     end if;
     
     SELECT count(*) INTO any_rows_found
@@ -278,7 +293,7 @@ BEGIN
     WHERE ref_produit = :NEW.REF_PRODUIT;
     
     IF any_rows_found <> 0 THEN
-      raise_application_error(-20004, 'Erreur : le produit Ã  supprimer est dÃ©jÃ  rÃ©fÃ©rencÃ© dans la table DÃ©tailsCommandes en AmÃ©rique');
+      raise_application_error(-20004, 'Erreur : le produit à supprimer est déjà référencé dans la table DétailsCommandes en Amérique');
     end if;
     
     SELECT count(*) INTO any_rows_found
@@ -286,7 +301,7 @@ BEGIN
     WHERE ref_produit = :NEW.REF_PRODUIT;
     
     IF any_rows_found <> 0 THEN
-      raise_application_error(-20005, 'Erreur : le produit Ã  supprimer est dÃ©jÃ  rÃ©fÃ©rencÃ© dans la table Stocks en Europe du Nord');
+      raise_application_error(-20005, 'Erreur : le produit à supprimer est déjà référencé dans la table Stocks en Europe du Nord');
     end if;
     
     SELECT count(*) INTO any_rows_found
@@ -294,7 +309,7 @@ BEGIN
     WHERE ref_produit = :NEW.REF_PRODUIT;
     
     IF any_rows_found <> 0 THEN
-      raise_application_error(-20006, 'Erreur : le produit Ã  supprimer est dÃ©jÃ  rÃ©fÃ©rencÃ© dans la table Stocks pour un pays inconnu');
+      raise_application_error(-20006, 'Erreur : le produit à supprimer est déjà référencé dans la table Stocks pour un pays inconnu');
     end if;
     
     
@@ -303,22 +318,34 @@ BEGIN
     WHERE ref_produit = :NEW.REF_PRODUIT;
     
     IF any_rows_found <> 0 THEN
-      raise_application_error(-20007, 'Erreur : le produit Ã  supprimer est dÃ©jÃ  rÃ©fÃ©rencÃ© dans la table Stocks en AmÃ©rique');
+      raise_application_error(-20007, 'Erreur : le produit à supprimer est déjà référencé dans la table Stocks en Amérique');
     end if;
   END IF;
 EXCEPTION
   WHEN NO_DATA_FOUND THEN 
-    RAISE_APPLICATION_ERROR(-20002, 'Erreur : tout fournisseur rÃ©fÃ©rencÃ© doit exister dans la table des fournisseurs');
+    RAISE_APPLICATION_ERROR(-20002, 'Erreur : tout fournisseur référencé doit exister dans la table des fournisseurs');
 END;
 /
 
 /*
-  Tests
+  Tests : contrainte d'intégrité de produits
+*/
+insert into produits values(89, 'starwax', 12, 1,12,45);    --Fonctionne : le fournisseur 12 existe
+delete from produits where ref_produit=89;      --Fonctionne : le produit existe bien
+insert into produits values(89, 'starwax', 118, 1,12,45);    --Ne fonctionne pas : le fournisseur 118 n'existe pas...
+-- A tester : insertion du produit dans stock et/ou details_commande et supprimer le produit ainsi inséré pour vérifier la contrainte d'intégrité
+
+
+/*
+  Tests : insertion dans la vue stock
 */
 select * from stock;
 desc stock;
-insert into stock values (2, 'Portugal', 4, 6 ,0);
-delete from stock where ref_produit=2 and pays='Portugal';
-delete from stock where ref_produit = 1 and pays = 'Allemagne';
+insert into stock values (2, 'Portugal', 4, 6 ,0);       --Fonctionne : le pays est en adéquation avec la relation fragmentée (stocks d'Europe du Sud)
+delete from stock where ref_produit=2 and pays='Portugal';    -- Fonctionne : le pays a été inséré
 
-desc stockes;
+insert into stock values (2, 'Allemagne', 4, 6 ,0);   --Ne fonctionne pas : le pays n'appartient pas à l'Europe du Sud
+delete from stock where ref_produit = 1 and pays = 'Allemagne';  --Ne fonctionne pas : le pays n'appartient pas à l'Europe du Sud
+
+
+
