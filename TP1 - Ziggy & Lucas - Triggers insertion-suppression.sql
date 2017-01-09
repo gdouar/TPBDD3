@@ -1,16 +1,12 @@
-/*
-  Trigger remplaÃ§ant l'insertion dans une vue spÃ©cifique (Stocks)
-*/
-
-CREATE OR REPLACE TRIGGER modify_Stocks INSTEAD OF UPDATE OR INSERT or delete ON Stock
+create or replace TRIGGER modify_Stocks INSTEAD OF UPDATE OR INSERT or delete ON Stock
 FOR EACH ROW
 BEGIN
 
-  IF INSERTING  THEN          --Insertion Ã  contrÃ´ler
+  IF INSERTING  THEN          --Insertion à contrôler
      IF NOT (:NEW.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
     'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
     'Autriche', 'Suisse')) THEN
-        RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spÃ©cifiÃ© n''a pas Ã©tÃ© reconnu.');
+        RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié n''a pas été reconnu.');
     else
       INSERT INTO Stockes 
       VALUES (:new.ref_produit,:new.pays, :new.unites_stock, :new.unites_commandees, :new.indisponible);
@@ -18,13 +14,13 @@ BEGIN
   end if;
   /*
   
-                  WIP : il faut pouvoir identifier les colonnes ayant Ã©tÃ© mises Ã  jour...
+                  WIP : il faut pouvoir identifier les colonnes ayant été mises à jour...
   
-  IF UPDATING THEN          -- Modification Ã  contrÃ´ler
+  IF UPDATING THEN          -- Modification à contrôler
      IF NOT (:NEW.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
     'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
     'Autriche', 'Suisse')) THEN
-      RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spÃ©cifiÃ© n''a pas Ã©tÃ© reconnu.');
+      RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié n''a pas été reconnu.');
       else
         update stockes          
         set 
@@ -37,11 +33,13 @@ BEGIN
     
   END IF;*/
   
-   IF deleting THEN       --Suppression standard
-      delete from stockes where ref_produit = :new.ref_produit AND pays = :new.pays;
+ IF deleting THEN       --Suppression standard
+    IF NOT (:old.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+    'Autriche', 'Suisse')) THEN
+        RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié n''a pas été reconnu.');
+    else
+      delete from stockes where ref_produit = :old.ref_produit AND pays = :old.pays;
     end if;
-  
-  
-  
+ end if;
 END;
-
