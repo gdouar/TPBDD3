@@ -20,7 +20,7 @@ BEGIN
 					<!>   TODO:  WIP, il faut pouvoir identifier les colonnes ayant été mises à jour...   <!>
 					
   
-  IF UPDATING THEN          -- Modification à contrôler
+  IF UPDATING THEN          -- Modification à contrôler : on ne peut pas modifier les données d'un stock non local !
      IF NOT (:NEW.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
     'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
     'Autriche', 'Suisse')) THEN
@@ -32,7 +32,8 @@ BEGIN
         PAYS = :NEW.PAYS,
         UNITES_STOCK = :new.UNITES_STOCK,
         UNITES_COMMANDEES = :new.UNITES_COMMANDEES,
-        INDISPONIBLE = :new.INDISPONIBLE;
+        INDISPONIBLE = :new.INDISPONIBLE
+		WHERE ref_produit = :old.ref_produit AND pays=:old.PAYS;
       end if;
     
   END IF;*/
@@ -67,8 +68,28 @@ BEGIN
     end if;  
   end if;
   
- /*
-	TODO : Prévoir traitement des requêtes de type UPDATE
+ 
+  /*
+					<!>   TODO:  WIP, il faut pouvoir identifier les colonnes ayant été mises à jour...   <!>
+					
+  IF UPDATING THEN          -- Modification à contrôler : on ne peut pas modifier les données d'un client non local !
+     IF NOT (:NEW.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+    'Autriche', 'Suisse')) THEN
+      RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié n''a pas été reconnu.');
+      else
+        update clientses          
+        set 
+        code_client = :new.code_client,
+        societe = :NEW.societe,
+        adresse = :new.adresse,
+        ville = :new.ville,
+        code_postal = :new.code_postal,
+		pays = :new.pays,
+        telephone = :new.telephone,
+        fax = :new.fax
+		WHERE code_client = :old.code_client;
+      end if;
 */
   
  IF deleting THEN       --Suppression standard, on ne peut pas supprimer un client non local, car la gestion de ces clients ne dépend pas de l'application SellIt Europe du Sud
@@ -109,7 +130,29 @@ BEGIN
   end if;
   
  /*
-	TODO : Prévoir traitement des requêtes de type UPDATE
+				<!>   TODO:  WIP, il faut pouvoir identifier les colonnes ayant été mises à jour...   <!>
+				
+  IF UPDATING THEN          -- Modification à contrôler : on ne peut pas modifier les données d'une commande d'un client étranger !
+  	
+	SELECT pays INTO clientCountry
+	FROM Clients
+	WHERE CODE_CLIENT = :new.CODE_CLIENT;
+	
+     IF NOT (clientCountry in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+    'Autriche', 'Suisse')) THEN
+      RAISE_APPLICATION_ERROR(-20009, 'Erreur : le client de la commande renseignée ne se trouve pas dans la bonne région.');
+      else
+        update Commandeses          
+        set 
+        NO_COMMANDE = :new.NO_COMMANDE,
+        CODE_CLIENT = :NEW.CODE_CLIENT,
+        NO_EMPLOYE = :new.NO_EMPLOYE,
+        DATE_COMMANDE = :new.DATE_COMMANDE,
+        DATE_ENVOI = :new.DATE_ENVOI,
+		PORT = :new.PORT,
+		where no_commande = :old.no_commande;
+      end if;
 */
   
  IF deleting THEN       --Suppression à vérifier : on ne peut pas supprimer des commandes d'un client étranger (on ne travaille que sur les clients locaux)
@@ -164,7 +207,30 @@ BEGIN
   end if;
   
  /*
-	TODO : Prévoir traitement des requêtes de type UPDATE
+				<!>   TODO:  WIP, il faut pouvoir identifier les colonnes ayant été mises à jour...   <!>
+				
+  IF UPDATING THEN          -- Modification à contrôler : on ne peut pas modifier les données d'un détail de commande d'un client étranger !
+  	
+	SELECT c.pays INTO clientCountry
+	FROM Commande NATURAL JOIN Clients c
+	WHERE CODE_CLIENT = (
+		SELECT CODE_CLIENT FROM Commandes c2 WHERE c2.NO_COMMANDE = :new.NO_COMMANDE
+	);
+	
+     IF NOT (clientCountry in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+    'Autriche', 'Suisse')) THEN
+      RAISE_APPLICATION_ERROR(-20009, 'Erreur : le client de la commande renseignée ne se trouve pas dans la bonne région.');
+      else
+        update DETAILS_Commandeses          
+        set 
+        NO_COMMANDE = :new.NO_COMMANDE,
+        REF_PRODUIT = :NEW.REF_PRODUIT,
+        PRIX_UNITAIRE = :new.PRIX_UNITAIRE,
+        QUANTITE = :new.QUANTITE,
+        REMISE = :new.REMISE,
+		where NO_COMMANDE = :old.NO_COMMANDE AND REF_PRODUIT=:old.REF_PRODUIT;
+      end if;
 */
   
  IF deleting THEN       --Suppression à vérifier : on ne peut pas supprimer des détails de commandes d'un client étranger (on ne travaille que sur les clients locaux)
