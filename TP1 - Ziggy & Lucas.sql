@@ -169,13 +169,13 @@ EXCEPTION
 END;
 /
 desc details_commandeses;
+
 /*
   FK possibles pour assurer les clés étrangères locales
 */
 
 alter table details_commandeses add constraint fk_detailscmdesproduits foreign key (REF_PRODUIT) REFERENCES Produits;
-
-
+alter table details_commandeses add constraint fk_detailsCmdeCmde foreign key (no_commande) references commandeses;
 alter table stockES add constraint fk_stockESproduits foreign key (REF_PRODUIT) REFERENCES Produits;
 
 
