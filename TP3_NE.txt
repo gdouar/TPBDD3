@@ -373,53 +373,64 @@ FOR EACH ROW
 
     IF INSERTING
     THEN --Insertion à contrôler
-      IF NOT (:NEW.pays IN (SELECT pays
-                            FROM CLIENTSEN))
+      IF (:NEW.pays IN
+          ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas'))
       THEN
-        IF NOT (:NEW.pay IN (SELECT pays
-                             FROM Clients MINUS (SELECT pays
-                                                 FROM CLIENTSEN)))
+        INSERT INTO STOCKEN
+        VALUES (:new.ref_produit, :new.pays, :new.unites_stock, :new.unites_commandees, :new.indisponible);
+      ELSIF (:NEW.pay IN (/*liste de tous les pays*/))
         THEN
-          INSERT INTO Stockes
-          VALUES (:new.ref_produit, :new.pays, :new.unites_stock, :new.unites_commandees, :new.indisponible);
-        ELSE
           RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié est dans une autre zone');
-        END IF;
-
+      ELSE
+        DBMS_OUTPUT.PUT_LINE('StockOI: nouveau pays = ' || :NEW.pays);
+        INSERT INTO STOCKOI
+        VALUES (:new.ref_produit, :new.pays, :new.unites_stock, :new.unites_commandees, :new.indisponible);
       END IF;
     END IF;
-    /*
-      IF UPDATING THEN          -- Modification à contrôler : on ne peut pas modifier les données d'un stock non local !
-         IF (:NEW.pays in (select pays from CLIENTSEN ) THEN
-          RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié n''a pas été reconnu.');
-          else
-            update stockes
-            set
-            ref_produit = :new.ref_produit,
-            PAYS = :NEW.PAYS,
-            UNITES_STOCK = :new.UNITES_STOCK,
-            UNITES_COMMANDEES = :new.UNITES_COMMANDEES,
-            INDISPONIBLE = :new.INDISPONIBLE
-        WHERE ref_produit = :old.ref_produit AND pays=:old.PAYS;
-          end if;
 
+    IF UPDATING
+    THEN -- Modification à contrôler : on ne peut pas modifier les données d'un stock non local !
+      IF (:NEW.pays IN
+          ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas'))
+      THEN
+
+        UPDATE stockes
+        SET
+          ref_produit       = :new.ref_produit,
+          PAYS              = :NEW.PAYS,
+          UNITES_STOCK      = :new.UNITES_STOCK,
+          UNITES_COMMANDEES = :new.UNITES_COMMANDEES,
+          INDISPONIBLE      = :new.INDISPONIBLE
+        WHERE ref_produit = :old.ref_produit AND pays = :old.PAYS;
+      ELSEIF (:NEW.pay IN (/*liste de tous les pays*/))
+        THEN
+          RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié est dans une autre zone');
+      ELSE
+        UPDATE STOCKOI
+        SET
+          ref_produit       = :new.ref_produit,
+          PAYS              = :NEW.PAYS,
+          UNITES_STOCK      = :new.UNITES_STOCK,
+          UNITES_COMMANDEES = :new.UNITES_COMMANDEES,
+          INDISPONIBLE      = :new.INDISPONIBLE
+        WHERE ref_produit = :old.ref_produit AND pays = :old.PAYS;
       END IF;
-    */
+
+    END IF;
+
     IF DELETING
     THEN --Suppression à vérifier ; on ne peut pas supprimer un stock ne faisant pas partie de la région du site (gestion du stock LOCAL seulement)
-      DBMS_OUTPUT.PUT_LINE('Pays = ' || :old.pays);
-      IF (:old.pays IN (SELECT pays
-                        FROM CLIENTSEN))
+      IF (:old.pays IN
+          ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas'))
       THEN
         DELETE FROM STOCKEN
         WHERE ref_produit = :old.ref_produit AND pays = :old.pays;
-      ELSIF (:old.pays IN (SELECT pays
-                           FROM CLIENTSOI))
+       ELSEIF (:NEW.pay IN (/*liste de tous les pays*/))
         THEN
+          RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié est dans une autre zone');
+      ELSE
           DELETE FROM STOCKOI
           WHERE ref_produit = :old.ref_produit AND pays = :old.pays;
-      ELSE
-        RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié n''a pas été reconnu.');
       END IF;
     END IF;
   END;
