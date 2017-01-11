@@ -24,6 +24,32 @@ CREATE TABLE Employes as (
 
 
 CREATE table Commandes_AM as(
+CREATE DATABASE LINK tplink CONNECT TO hcburca IDENTIFIED BY mdporacle USING 'DB1';
+
+DROP DATABASE LINK tplink;
+Select * from Ryori.Clients@tplink;
+
+CREATE DATABASE LINK linkES CONNECT TO hcburca IDENTIFIED BY mdporacle USING 'DB3';
+Select * from lpoisse.Produits@linkES;
+
+-- creates fragmented clients table 
+CREATE table Clients_AM as (
+  Select * from Ryori.Clients@tplink
+  where Pays in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+  'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+  'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+  'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+  'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+  'Venezuela')
+  );
+
+
+CREATE TABLE Employes as (
+  Select * from Ryori.Employes@tplink
+);
+
+
+CREATE table Commandes_AM as(
   Select com.* from Ryori.Commandes@tplink com, Ryori.Clients@tplink cli 
   where com.code_client = cli.code_client and cli.pays in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
   'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
@@ -48,19 +74,40 @@ CREATE table Stock_AM as(
   'Venezuela')
 );
 
--- droits lectures autres sites pour la table stock
+-- toutes les droits pour autres sites pour la table stock
 
-GRANT select on stock_am to lpoisse; 
-GRANT select on stock_am to zvergne;
-Grant select on stock_am to hhamelin;
-Grant select on stock_am to cpottiez;
+GRANT select, update, insert on stock_am to lpoisse; 
+GRANT select, update, insert on stock_am to zvergne;
+Grant select, update, insert on stock_am to hhamelin;
+Grant select, update, insert on stock_am to cpottiez;
 
 -- droits lectures autres sites pour la table employes
 
-GRANT select on employes to lpoisse; 
-GRANT select on employes to zvergne;
-Grant select on employes to hhamelin;
-Grant select on employes to cpottiez;
+GRANT select, update, insert on employes to lpoisse; 
+GRANT select, update, insert on employes to zvergne;
+Grant select, update, insert on employes to hhamelin;
+Grant select, update, insert on employes to cpottiez;
+
+-- droits lectures autres sites pour la table clients_am
+
+GRANT select, update, insert on clients_am to lpoisse; 
+GRANT select, update, insert on clients_am to zvergne;
+Grant select, update, insert on clients_am to hhamelin;
+Grant select, update, insert on clients_am to cpottiez;
+
+-- droits lectures autres sites pour la table commandes_am
+
+GRANT select, update, insert on commandes_am to lpoisse; 
+GRANT select, update, insert on commandes_am to zvergne;
+Grant select, update, insert on commandes_am to hhamelin;
+Grant select, update, insert on commandes_am to cpottiez;
+
+-- droits lectures autres sites pour la table details_commandes_am
+
+GRANT select, update, insert on details_commandes_am to lpoisse; 
+GRANT select, update, insert on details_commandes_am to zvergne;
+Grant select, update, insert on details_commandes_am to hhamelin;
+Grant select, update, insert on details_commandes_am to cpottiez;
 
 -- Contraintes primary key
 
@@ -75,7 +122,7 @@ ALTER TABLE stock_am ADD CONSTRAINT pkStock PRIMARY KEY (ref_produit, pays);
 ALTER TABLE employes ADD CONSTRAINT fkEmployeEmploye FOREIGN KEY (rend_Compte) REFERENCES Employes(no_employe);
 ALTER TABLE commandes_am ADD CONSTRAINT fkCommandesClients FOREIGN KEY (code_client) REFERENCES Clients_am(code_client);
 ALTER TABLE commandes_am ADD CONSTRAINT fkCommandesEmployes FOREIGN KEY (no_employe) REFERENCES Employes(no_employe);
-ALTER TABLE details_commandes_am ADD CONSTRAINT fkDetailsCommandesCommandes FOREIGN KEY (no_commande) REFERENCES Commandes_am(no_commande);
+ALTER TABLE details_commandes_am ADD CONSTRAINT fkDetailsCommandesCommandes FOREIGN KEY (no_commande) REFERENCES Commandes_am(no_commande) ON DELETE CASCADE;
 
 CREATE OR REPLACE TRIGGER FKDETAILSCOMMANDESPRODUITS 
 BEFORE INSERT OR UPDATE ON details_commandes_am 
@@ -93,5 +140,208 @@ BEGIN
       WHEN NO_DATA_FOUND THEN
         Raise_application_error(-20001, 'Le produit n''existe pas');
 END;
+
+CREATE OR REPLACE TRIGGER FKSTOCKPRODUITS 
+BEFORE INSERT OR UPDATE ON stock_am 
+FOR EACH ROW
+DECLARE
+
+  refprod$ stock_am.ref_produit%TYPE;
+  
+BEGIN
+  Select ref_produit into refprod$ 
+  From lpoisse.produits@linkES
+  Where ref_produit = :New.ref_produit;
+  
+  EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        Raise_application_error(-20001, 'Le produit n''existe pas');
+END;
 /
-INSERT INTO details_commandes_am VALUES (10594, 1000, 0, 1, 0.5);
+
+-- update primary keys to include local prefix
+UPDATE CLIENTS_AM SET Code_Client = 'AM' || rtrim(Code_Client);
+
+-- vues
+CREATE OR REPLACE VIEW CLIENTS AS
+  SELECT *
+  FROM CLIENTS_AM
+  UNION 
+  SELECT * 
+  FROM lpoisse.clientsES@linkES 
+  UNION 
+  SELECT * 
+  FROM cpottiez.clientsEN@tplink
+  UNION 
+  SELECT *
+  FROM cpottiez.clientsOI@tplink;
+  
+CREATE OR REPLACE VIEW COMMANDES AS
+  SELECT *
+  FROM COMMANDES_AM
+  UNION 
+  SELECT * 
+  FROM lpoisse.COMMANDESES@linkES 
+  UNION 
+  SELECT * 
+  FROM cpottiez.COMMANDESEN@tplink
+  UNION 
+  SELECT *
+  FROM cpottiez.COMMANDESOI@tplink;
+  
+CREATE OR REPLACE VIEW DETAILS_COMMANDES AS
+  SELECT *
+  FROM Details_COMMANDES_AM
+  UNION 
+  SELECT * 
+  FROM lpoisse.Details_COMMANDESES@linkES 
+  UNION 
+  SELECT * 
+  FROM cpottiez.Details_COMMANDESEN@tplink
+  UNION 
+  SELECT *
+  FROM cpottiez.Details_COMMANDESOI@tplink;
+  
+CREATE OR REPLACE VIEW STOCK AS 
+   SELECT *
+   FROM stock_AM
+   UNION 
+   SELECT * 
+   FROM lpoisse.stockES@linkES 
+   UNION 
+   SELECT * 
+   FROM cpottiez.stockEN@tplink
+   UNION 
+   SELECT *
+   FROM cpottiez.stockOI@tplink;
+  
+CREATE OR REPLACE TRIGGER MODIFY_COMMANDES
+INSTEAD OF DELETE OR INSERT OR UPDATE ON COMMANDES 
+FOR EACH ROW
+DECLARE
+  paysclient$ clients_am.pays%TYPE;
+BEGIN
+  if (inserting or updating) then 
+    SELECT DISTINCT Pays INTO paysclient$
+    FROM CLIENTS
+    WHERE code_client = :new.code_client;
+  elsif (deleting) then 
+    SELECT DISTINCT Pays INTO paysclient$
+    FROM CLIENTS
+    WHERE code_client = :old.code_client;
+  end if;
+  
+  if (inserting) then
+    if (paysclient$ in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+                      'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+                      'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+                      'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+                      'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+                      'Venezuela')) then
+      INSERT INTO Commandes_AM VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
+    elsif (paysclient$ in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+                             'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+                             'Autriche', 'Suisse')) then
+      INSERT INTO lpoisse.commandesES@linkES VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
+    elsif (paysclient$ in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 
+                             'Luxembourg', 'Pays-Bas')) then 
+      INSERT INTO cpottiez.commandesEN@tplink VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
+    else 
+      INSERT INTO cpottiez.commandesOI@tplink VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
+    end if;
+  elsif (updating) then
+    if (paysclient$ in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+                      'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+                      'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+                      'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+                      'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+                      'Venezuela')) then
+      UPDATE Commandes_AM SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
+                              date_commande = :new.date_commande, date_envoi = :new.date_envoi, port = :new.port
+                          WHERE no_commande = :old.no_commande;
+    elsif (paysclient$ in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+                             'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+                             'Autriche', 'Suisse')) then
+      UPDATE lpoisse.commandesES@linkES SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
+                              date_commande = :new.date_commande, date_envoi = :new.date_envoi, port = :new.port
+                          WHERE no_commande = :old.no_commande;
+    elsif (paysclient$ in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 
+                             'Luxembourg', 'Pays-Bas')) then 
+      UPDATE cpottiez.commandesEN@tplink SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
+                              date_commande = :new.date_commande, date_envoi = :new.date_envoi, port = :new.port
+                          WHERE no_commande = :old.no_commande;
+    else 
+      UPDATE cpottiez.commandesOI@tplink SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
+                              date_commande = :new.date_commande, date_envoi = :new.date_envoi, port = :new.port
+                          WHERE no_commande = :old.no_commande;
+    end if;
+  elsif (deleting) then 
+    if (paysclient$ in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+                      'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+                      'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+                      'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+                      'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+                      'Venezuela')) then
+      DELETE FROM commandes_AM WHERE no_commande = :old.no_commande;
+    elsif (paysclient$ in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+                             'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+                             'Autriche', 'Suisse')) then
+      DELETE FROM lpoisse.commandesES@linkES WHERE no_commande = :old.no_commande;
+    elsif (paysclient$ in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 
+                             'Luxembourg', 'Pays-Bas')) then 
+      DELETE FROM cpottiez.commandesEN@tplink WHERE no_commande = :old.no_commande;
+    else 
+      DELETE FROM cpottiez.commandesOI@tplink WHERE no_commande = :old.no_commande;
+    end if;
+  end if;
+
+END;
+/
+
+-- test insert on commande
+INSERT INTO COMMANDES VALUES (7000, '12345', 3, CURRENT_DATE, null, null);
+INSERT INTO COMMANDES VALUES (5000, 'FOLKO', 3, CURRENT_DATE, null, null);
+INSERT INTO COMMANDES VALUES (6666, 'PICCO', 3, CURRENT_DATE, null, null);
+COMMIT;
+
+-- test update on commandes
+UPDATE COmmandes SET date_envoi = CURRENT_DATE WHERE code_client = '12345';
+UPDATE COmmandes SET date_envoi = CURRENT_DATE WHERE code_client = 'FOLKO';
+UPDATE COmmandes SET date_envoi = CURRENT_DATE WHERE code_client = 'PICCO';
+COMMIT;
+
+-- test delete on commandes
+DELETE FROM Commandes WHERE code_client = '12345';
+DELETE FROM Commandes WHERE code_client = 'FOLKO';
+DELETE FROM Commandes WHERE code_client = 'PICCO';
+COMMIT;
+
+-- test insert on clients 
+INSERT INTO CLIENTS VALUES ('haha', 'DARK side', 'death star', 'far far away', 666, 'Espagne', 'here''s my number', 'call me maybe');
+INSERT INTO CLIENTS VALUES ('hihi', 'cold', 'st. cold, 31', 'Coldington', '-300', 'Suede', '000', '111');
+INSERT INTO CLIENTS VALUES ('un', 'bla', 'blabla', 'Blablatown', '666', 'Autriche', '000', '111');
+COMMIT;
+
+-- test update on clients
+UPDATE CLIENTS SET code_postal = 'new666' WHERE code_client = 'haha';
+UPDATE CLIENTS SET code_postal = 'new-300' WHERE code_client = 'hihi';
+UPDATE CLIENTS SET code_postal = 'new' WHERE code_client = 'un';
+COMMIT;
+
+-- test delete on clients
+DELETE FROM CLIENTS WHERE code_client = 'haha';
+DELETE FROM CLIENTS WHERE code_client = 'hihi';
+DELETE FROM CLIENTS WHERE code_client = 'un';
+COMMIT;
+
+-- materialized view log
+
+-- materialized views
+CREATE MATERIALIZED VIEW PRODUITS 
+REFRESH COMPLETE
+NEXT sysdate +1/4096
+AS 
+  SELECT * 
+  FROM LPOISSE.PRODUITS@LINKES;
+
+DROP MATERIALIZED VIEW PRODUITS;
