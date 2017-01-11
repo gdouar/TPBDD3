@@ -107,7 +107,7 @@ END IF;
 END;
 
 
-
+
 /*
   Trigger de modification d'un client
 */
@@ -234,11 +234,11 @@ end;
 /* 
 	Trigger pour insert, update, delete on Commandes
 */
-CREATE OR REPLACE TRIGGER modify_commandes
+create or replace TRIGGER MODIFY_COMMANDES
 INSTEAD OF DELETE OR INSERT OR UPDATE ON COMMANDES 
 FOR EACH ROW
 DECLARE
-  paysclient$ clients_am.pays%TYPE;
+  paysclient$ varchar2(15);
 BEGIN
   if (inserting or updating) then 
     SELECT DISTINCT Pays INTO paysclient$
@@ -257,16 +257,16 @@ BEGIN
                       'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
                       'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
                       'Venezuela')) then
-      INSERT INTO Commandes_AM VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
+      INSERT INTO hcburca.Commandes_AM@dblinkus VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
     elsif (paysclient$ in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
                              'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
                              'Autriche', 'Suisse')) then
-      INSERT INTO lpoisse.commandesES@linkES VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
+      INSERT INTO commandesES VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
     elsif (paysclient$ in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 
                              'Luxembourg', 'Pays-Bas')) then 
-      INSERT INTO cpottiez.commandesEN@tplink VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
+      INSERT INTO cpottiez.commandesEN@dblinkmain VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
     else 
-      INSERT INTO cpottiez.commandesOI@tplink VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
+      INSERT INTO cpottiez.commandesOI@dblinkmain VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
     end if;
   elsif (updating) then
     if (paysclient$ in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
@@ -275,22 +275,22 @@ BEGIN
                       'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
                       'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
                       'Venezuela')) then
-      UPDATE Commandes_AM SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
+      UPDATE hcburca.Commandes_AM@dblinkus SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
                               date_commande = :new.date_commande, date_envoi = :new.date_envoi, port = :new.port
                           WHERE no_commande = :old.no_commande;
     elsif (paysclient$ in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
                              'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
                              'Autriche', 'Suisse')) then
-      UPDATE lpoisse.commandesES@linkES SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
+      UPDATE commandesES SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
                               date_commande = :new.date_commande, date_envoi = :new.date_envoi, port = :new.port
                           WHERE no_commande = :old.no_commande;
     elsif (paysclient$ in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 
                              'Luxembourg', 'Pays-Bas')) then 
-      UPDATE cpottiez.commandesEN@tplink SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
+      UPDATE cpottiez.commandesEN@dblinkmain SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
                               date_commande = :new.date_commande, date_envoi = :new.date_envoi, port = :new.port
                           WHERE no_commande = :old.no_commande;
     else 
-      UPDATE cpottiez.commandesOI@tplink SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
+      UPDATE cpottiez.commandesOI@dblinkmain SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
                               date_commande = :new.date_commande, date_envoi = :new.date_envoi, port = :new.port
                           WHERE no_commande = :old.no_commande;
     end if;
@@ -301,18 +301,22 @@ BEGIN
                       'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
                       'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
                       'Venezuela')) then
-      DELETE FROM commandes_AM WHERE no_commande = :old.no_commande;
+      DELETE FROM hcburca.Commandes_AM@dblinkus WHERE no_commande = :old.no_commande;
     elsif (paysclient$ in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
                              'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
                              'Autriche', 'Suisse')) then
-      DELETE FROM lpoisse.commandesES@linkES WHERE no_commande = :old.no_commande;
+      DELETE FROM commandesES WHERE no_commande = :old.no_commande;
     elsif (paysclient$ in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 
                              'Luxembourg', 'Pays-Bas')) then 
-      DELETE FROM cpottiez.commandesEN@tplink WHERE no_commande = :old.no_commande;
+      DELETE FROM cpottiez.commandesEN@dblinkmain WHERE no_commande = :old.no_commande;
     else 
-      DELETE FROM cpottiez.commandesOI@tplink WHERE no_commande = :old.no_commande;
+      DELETE FROM cpottiez.commandesOI@dblinkmain WHERE no_commande = :old.no_commande;
     end if;
   end if;
+
+EXCEPTION
+  WHEN no_data_found then 
+  raise_application_error(-20011, 'Erreur : le client indiqué est inconnu.');
 
 END;
 /
@@ -320,7 +324,7 @@ END;
 /*
 Trigger appelé lors d'une action LMD sur la vue 'DETAILS_COMMANDES'
 */
-CREATE OR REPLACE TRIGGER modify_DetailsCommandes INSTEAD OF
+create or replace TRIGGER modify_DetailsCommandes INSTEAD OF
   UPDATE OR
   INSERT OR
   DELETE ON DETAILS_COMMANDES FOR EACH ROW 
@@ -378,6 +382,7 @@ CREATE OR REPLACE TRIGGER modify_DetailsCommandes INSTEAD OF
     END IF;
   END IF;
   IF UPDATING THEN -- Modification à contrôler : on ne peut pas modifier les données d'un stock non local !
+
     IF(:old.ref_produit= :new.ref_produit AND :old.NO_COMMANDE= :new.no_commande) then
       IF (paysTest IN ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) THEN
         UPDATE cpottiez.DETAILS_COMMANDESEN@dblinkmain
@@ -449,5 +454,8 @@ CREATE OR REPLACE TRIGGER modify_DetailsCommandes INSTEAD OF
       AND no_commande   = :old.no_commande;
     END IF;
   END IF;
+  
+  exception
+    when no_data_found then
+      raise_application_error(-20012, 'La commande indiquée est inconnue');
 END;
-

@@ -239,7 +239,11 @@ CREATE OR REPLACE VIEW Fournisseurs
 AS
 (SELECT * FROM cpottiez.fournisseurs@dblinkmain);
 
-
+-- Vue employés
+CREATE OR REPLACE VIEW employes
+AS
+(SELECT * FROM hcburca.Employes@dbLinkUS
+);
 
 select * from clients;
 select * from stock;
