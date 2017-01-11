@@ -1,78 +1,200 @@
 /*
-	Trigger appelé lors d'une action LMD sur la vue 'Stock'
+Trigger appelé lors d'une action LMD sur la vue 'Stock'
 */
-create or replace TRIGGER modify_Stocks INSTEAD OF UPDATE OR INSERT or delete ON Stock
-FOR EACH ROW
-BEGIN
-
-  IF INSERTING  THEN          --Insertion à contrôler
-     IF NOT (:NEW.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
-    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
-    'Autriche', 'Suisse')) THEN
-        RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié n''a pas été reconnu.');
-    else
-      INSERT INTO Stockes 
-      VALUES (:new.ref_produit,:new.pays, :new.unites_stock, :new.unites_commandees, :new.indisponible);
-    end if;  
-  end if;
-  
-  IF UPDATING THEN          -- Modification à contrôler : on ne peut pas modifier les données d'un stock non local !
-     IF NOT (:NEW.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
-    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
-    'Autriche', 'Suisse')) THEN
-      RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié n''a pas été reconnu.');
-      else
-        update stockes          
-        set 
-        ref_produit = :new.ref_produit,
-        PAYS = :NEW.PAYS,
-        UNITES_STOCK = :new.UNITES_STOCK,
-        UNITES_COMMANDEES = :new.UNITES_COMMANDEES,
-        INDISPONIBLE = :new.INDISPONIBLE
-		WHERE ref_produit = :old.ref_produit AND pays=:old.PAYS;
-      end if;
-    
+CREATE OR REPLACE TRIGGER modify_Stocks INSTEAD OF
+  UPDATE OR
+  INSERT OR
+  DELETE ON Stock FOR EACH ROW BEGIN IF INSERTING THEN --Insertion à contrôler
+	IF (:NEW.pays IN ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) THEN
+  INSERT
+  INTO STOCKEN VALUES
+	(
+  	:new.ref_produit,
+  	:new.pays,
+  	:new.unites_stock,
+  	:new.unites_commandees,
+  	:new.indisponible
+	);
+ELSIF (:NEW.pays IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse')) THEN
+  INSERT
+  INTO lpoisse.stockes@LinkToDBES VALUES
+	(
+  	:new.ref_produit,
+  	:new.pays,
+  	:new.unites_stock,
+  	:new.unites_commandees,
+  	:new.indisponible
+	);
+ELSIF (:NEW.pays IN('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil', 'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique', 'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique', 'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie', 'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay', 'Venezuela')) THEN
+  INSERT
+  INTO hcburca.stock_am@LinkToDBUS VALUES
+	(
+  	:new.ref_produit,
+  	:new.pays,
+  	:new.unites_stock,
+  	:new.unites_commandees,
+  	:new.indisponible
+	);
+ELSE
+  INSERT
+  INTO STOCKOI VALUES
+	(
+  	:new.ref_produit,
+  	:new.pays,
+  	:new.unites_stock,
+  	:new.unites_commandees,
+  	:new.indisponible
+	);
+END IF;
+END IF;
+IF UPDATING THEN -- Modification à contrôler : on ne peut pas modifier les données d'un stock non local !
+  IF (:NEW.pays IN ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) THEN
+	UPDATE STOCKEN
+	SET ref_produit 	= :new.ref_produit,
+  	PAYS          	= :NEW.PAYS,
+  	UNITES_STOCK  	= :new.UNITES_STOCK,
+  	UNITES_COMMANDEES = :new.UNITES_COMMANDEES,
+  	INDISPONIBLE  	= :new.INDISPONIBLE
+	WHERE ref_produit   = :old.ref_produit
+	AND pays        	= :old.PAYS;
+  ELSIF (:NEW.pays IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse')) THEN
+	UPDATE lpoisse.stockes@LinkToDBES
+	SET ref_produit 	= :new.ref_produit,
+  	PAYS          	= :NEW.PAYS,
+  	UNITES_STOCK  	= :new.UNITES_STOCK,
+  	UNITES_COMMANDEES = :new.UNITES_COMMANDEES,
+  	INDISPONIBLE  	= :new.INDISPONIBLE
+	WHERE ref_produit   = :old.ref_produit
+	AND pays        	= :old.PAYS;
+  ELSIF (:NEW.pays IN('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil', 'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique', 'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique', 'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie', 'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay', 'Venezuela')) THEN
+	INSERT
+	INTO hcburca.stock_am@LinkToDBUS VALUES
+  	(
+    	:new.ref_produit,
+    	:new.pays,
+    	:new.unites_stock,
+    	:new.unites_commandees,
+    	:new.indisponible
+  	);
+  ELSE
+	UPDATE STOCKOI
+	SET ref_produit 	= :new.ref_produit,
+  	PAYS          	= :NEW.PAYS,
+  	UNITES_STOCK  	= :new.UNITES_STOCK,
+  	UNITES_COMMANDEES = :new.UNITES_COMMANDEES,
+  	INDISPONIBLE  	= :new.INDISPONIBLE
+	WHERE ref_produit   = :old.ref_produit
+	AND pays        	= :old.PAYS;
   END IF;
-  
- IF deleting THEN       --Suppression à vérifier ; on ne peut pas supprimer un stock ne faisant pas partie de la région du site (gestion du stock LOCAL seulement)
-    DBMS_OUTPUT.PUT_LINE('Pays = ' || :old.pays);
-    IF NOT (:old.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
-    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
-    'Autriche', 'Suisse')) THEN
-        RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié n''a pas été reconnu.');
-    else
-      delete from stockes where ref_produit = :old.ref_produit AND pays = :old.pays;
-    end if;
- end if;
+END IF;
+IF DELETING THEN --Suppression à vérifier ; on ne peut pas supprimer un stock ne faisant pas partie de la région du site (gestion du stock LOCAL seulement)
+  IF (:old.pays IN ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) THEN
+	DELETE FROM STOCKEN WHERE ref_produit = :old.ref_produit AND pays = :old.pays;
+  ELSIF (:old.pays IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse')) THEN
+	DELETE
+	FROM lpoisse.stockes@LinkToDBES
+	WHERE ref_produit = :old.ref_produit
+	AND pays      	= :old.pays;
+  ELSIF (:old.pays IN('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil', 'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique', 'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique', 'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie', 'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay', 'Venezuela')) THEN
+	DELETE
+	FROM hcburca.stock_am@LinkToDBUS
+	WHERE ref_produit = :old.ref_produit
+	AND pays      	= :old.pays;
+  ELSE
+	DELETE FROM STOCKOI WHERE ref_produit = :old.ref_produit AND pays = :old.pays;
+  END IF;
+END IF;
 END;
-/
 
+
+
 /*
-	Trigger appelé lors d'une action LMD sur la vue 'Clients'
+  Trigger de modification d'un client
 */
+
 create or replace TRIGGER modify_Clients INSTEAD OF UPDATE OR INSERT or delete ON Clients
 FOR EACH ROW
 BEGIN
+IF INSERTING then 
 
-  IF INSERTING  THEN          --Insertion à contrôler : on ne peut pas ajouter un client non local, car la gestion de ces clients ne dépend pas de l'application SellIt Europe du Sud
-     IF NOT (:NEW.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+IF (:NEW.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
     'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
     'Autriche', 'Suisse')) THEN
-        RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié n''a pas été reconnu.');
-    else
+    
       INSERT INTO Clientses 
       VALUES (:new.code_client,:new.societe, :new.adresse, :new.ville, :new.code_postal, :new.pays, :new.telephone, :new.fax);
-    end if;  
+     
+   ELSIF (:new.pays in  ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+  'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+  'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+  'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+  'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+  'Venezuela')) then
+          INSERT INTO hcburca.Clients_am@dbLinkUS 
+         VALUES (:new.code_client,:new.societe, :new.adresse, :new.ville, :new.code_postal, :new.pays, :new.telephone, :new.fax);
+
+      ELSIF  (:new.pays in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas'))
+        then
+         INSERT INTO cpottiez.ClientsEN@dblinkMain
+         VALUES (:new.code_client,:new.societe, :new.adresse, :new.ville, :new.code_postal, :new.pays, :new.telephone, :new.fax);
+
+      else
+         INSERT INTO cpottiez.ClientsOI@dblinkMain
+          VALUES (:new.code_client,:new.societe, :new.adresse, :new.ville, :new.code_postal, :new.pays, :new.telephone, :new.fax);
   end if;
+	END IF;
   
-  IF UPDATING THEN          -- Modification à contrôler : on ne peut pas modifier les données d'un client non local !
-     IF NOT (:NEW.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+  if UPDATING THEN
+  
+  if(:New.pays <> :OLD.pays) then
+     RAISE_APPLICATION_ERROR(-20010,'Attention, vous n''êtes pas autorisé à changer le pays de l''entreprise');
+    end if;
+     IF (:NEW.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
     'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
     'Autriche', 'Suisse')) THEN
-      RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié n''a pas été reconnu.');
+    update clientses          
+        set 
+        code_client = :new.code_client,
+        societe = :NEW.societe,
+        adresse = :new.adresse,
+        ville = :new.ville,
+        code_postal = :new.code_postal,
+        pays = :new.pays,
+        telephone = :new.telephone,
+        fax = :new.fax
+      WHERE code_client = :old.code_client;
+      ELSIF  (:new.pays in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+  'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+  'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+  'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+  'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+  'Venezuela')) then
+        update hcburca.clients_am@dblinkUS          
+        set 
+        code_client = :new.code_client,
+        societe = :NEW.societe,
+        adresse = :new.adresse,
+        ville = :new.ville,
+        code_postal = :new.code_postal,
+        pays = :new.pays,
+        telephone = :new.telephone,
+        fax = :new.fax
+      WHERE code_client = :old.code_client;
+      ELSIF  (:new.pays in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 
+      'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) then
+       update cpottiez.clientsen@dbLinkMain          
+        set 
+        code_client = :new.code_client,
+        societe = :NEW.societe,
+        adresse = :new.adresse,
+        ville = :new.ville,
+        code_postal = :new.code_postal,
+        pays = :new.pays,
+        telephone = :new.telephone,
+        fax = :new.fax
+      WHERE code_client = :old.code_client;
       else
-        
-        update clientses          
+        update cpottiez.clientsoi@dbLinkMain          
         set 
         code_client = :new.code_client,
         societe = :NEW.societe,
@@ -86,160 +208,246 @@ BEGIN
       end if;
   end if;
   
- IF deleting THEN       --Suppression standard, on ne peut pas supprimer un client non local, car la gestion de ces clients ne dépend pas de l'application SellIt Europe du Sud
-    IF NOT (:old.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+  IF DELETING THEN
+  
+    IF  (:old.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
     'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
     'Autriche', 'Suisse')) THEN
-        RAISE_APPLICATION_ERROR(-20008, 'Erreur : le pays spécifié n''a pas été reconnu.');
+    delete from clientses where code_client = :old.code_client;
+    
+    ELSIF (:old.pays in  ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+  'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+  'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+  'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+  'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+  'Venezuela')) then
+        delete from hcburca.clients_AM@dbLinkUS where code_client = :old.code_client;
+   ELSIF (:old.pays in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 
+   'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas'))then
+         delete from cpottiez.clientsEN@dbLinkMain where code_client = :old.code_client;
     else
-      delete from clientses where code_client = :old.code_client;
+         delete from cpottiez.clientsOI@dbLinkMain where code_client= :old.code_client;
     end if;
- end if;
+  END IF;
+end;
+
+/* 
+	Trigger pour insert, update, delete on Commandes
+*/
+CREATE OR REPLACE TRIGGER modify_commandes
+INSTEAD OF DELETE OR INSERT OR UPDATE ON COMMANDES 
+FOR EACH ROW
+DECLARE
+  paysclient$ clients_am.pays%TYPE;
+BEGIN
+  if (inserting or updating) then 
+    SELECT DISTINCT Pays INTO paysclient$
+    FROM CLIENTS
+    WHERE code_client = :new.code_client;
+  elsif (deleting) then 
+    SELECT DISTINCT Pays INTO paysclient$
+    FROM CLIENTS
+    WHERE code_client = :old.code_client;
+  end if;
+  
+  if (inserting) then
+    if (paysclient$ in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+                      'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+                      'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+                      'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+                      'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+                      'Venezuela')) then
+      INSERT INTO Commandes_AM VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
+    elsif (paysclient$ in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+                             'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+                             'Autriche', 'Suisse')) then
+      INSERT INTO lpoisse.commandesES@linkES VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
+    elsif (paysclient$ in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 
+                             'Luxembourg', 'Pays-Bas')) then 
+      INSERT INTO cpottiez.commandesEN@tplink VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
+    else 
+      INSERT INTO cpottiez.commandesOI@tplink VALUES (:new.no_commande, :new.code_client, :new.no_employe, :new.date_commande, :new.date_envoi, :new.port);
+    end if;
+  elsif (updating) then
+    if (paysclient$ in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+                      'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+                      'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+                      'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+                      'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+                      'Venezuela')) then
+      UPDATE Commandes_AM SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
+                              date_commande = :new.date_commande, date_envoi = :new.date_envoi, port = :new.port
+                          WHERE no_commande = :old.no_commande;
+    elsif (paysclient$ in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+                             'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+                             'Autriche', 'Suisse')) then
+      UPDATE lpoisse.commandesES@linkES SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
+                              date_commande = :new.date_commande, date_envoi = :new.date_envoi, port = :new.port
+                          WHERE no_commande = :old.no_commande;
+    elsif (paysclient$ in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 
+                             'Luxembourg', 'Pays-Bas')) then 
+      UPDATE cpottiez.commandesEN@tplink SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
+                              date_commande = :new.date_commande, date_envoi = :new.date_envoi, port = :new.port
+                          WHERE no_commande = :old.no_commande;
+    else 
+      UPDATE cpottiez.commandesOI@tplink SET no_commande = :new.no_commande, code_client = :new.code_client, no_employe = :new.no_employe, 
+                              date_commande = :new.date_commande, date_envoi = :new.date_envoi, port = :new.port
+                          WHERE no_commande = :old.no_commande;
+    end if;
+  elsif (deleting) then 
+    if (paysclient$ in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+                      'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+                      'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+                      'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+                      'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+                      'Venezuela')) then
+      DELETE FROM commandes_AM WHERE no_commande = :old.no_commande;
+    elsif (paysclient$ in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+                             'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+                             'Autriche', 'Suisse')) then
+      DELETE FROM lpoisse.commandesES@linkES WHERE no_commande = :old.no_commande;
+    elsif (paysclient$ in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 
+                             'Luxembourg', 'Pays-Bas')) then 
+      DELETE FROM cpottiez.commandesEN@tplink WHERE no_commande = :old.no_commande;
+    else 
+      DELETE FROM cpottiez.commandesOI@tplink WHERE no_commande = :old.no_commande;
+    end if;
+  end if;
+
 END;
 /
 
 /*
-	Trigger appelé lors d'une action LMD sur la vue 'Commandes'
+Trigger appelé lors d'une action LMD sur la vue 'DETAILS_COMMANDES'
 */
-create or replace TRIGGER modify_Commandes INSTEAD OF UPDATE OR INSERT or delete ON Commandes
-FOR EACH ROW
-DECLARE
-clientCountry Clients.pays%Type;
-BEGIN
-	
-  IF INSERTING  THEN          --Insertion à contrôler : on ne peut pas ajouter des commandes d'un client étranger (on ne travaille que sur les clients locaux)
-	
-	SELECT pays INTO clientCountry
-	FROM Clients
-	WHERE CODE_CLIENT = :new.CODE_CLIENT;
-	
-     IF NOT (clientCountry in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
-    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
-    'Autriche', 'Suisse')) THEN
-        RAISE_APPLICATION_ERROR(-20009, 'Erreur : le client de la commande renseignée ne se trouve pas dans la bonne région.');
-    else
-      INSERT INTO Commandeses 
-      VALUES (:new.NO_COMMANDE, :new.CODE_CLIENT, :new.NO_EMPLOYE, :new.DATE_COMMANDE, :new.DATE_ENVOI, :new.PORT);
-    end if;  
-  end if;
-
-  IF UPDATING THEN          -- Modification à contrôler : on ne peut pas modifier les données d'une commande d'un client étranger !
-  	
-	SELECT pays INTO clientCountry
-	FROM Clients
-	WHERE CODE_CLIENT = :new.CODE_CLIENT;
-	
-     IF NOT (clientCountry in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
-    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
-    'Autriche', 'Suisse')) THEN
-      RAISE_APPLICATION_ERROR(-20009, 'Erreur : le client de la commande renseignée ne se trouve pas dans la bonne région.');
-      else
-        update Commandeses          
-        set 
-        NO_COMMANDE = :new.NO_COMMANDE,
-        CODE_CLIENT = :NEW.CODE_CLIENT,
-        NO_EMPLOYE = :new.NO_EMPLOYE,
-        DATE_COMMANDE = :new.DATE_COMMANDE,
-        DATE_ENVOI = :new.DATE_ENVOI,
-        PORT = :new.PORT
-        where no_commande = :old.no_commande;
-      end if;
-  END IF;
-  
- IF deleting THEN       --Suppression à vérifier : on ne peut pas supprimer des commandes d'un client étranger (on ne travaille que sur les clients locaux)
- 	
-	SELECT pays INTO clientCountry
-	FROM Clients
-	WHERE CODE_CLIENT = :old.CODE_CLIENT;
- 
-    IF NOT (clientCountry in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
-    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
-    'Autriche', 'Suisse')) THEN
-        RAISE_APPLICATION_ERROR(-20009, 'Erreur : le client de la commande renseignée ne se trouve pas dans la bonne région.');
-    else
-      delete from Commandeses where no_commande = :old.no_commande;
+CREATE OR REPLACE TRIGGER modify_DetailsCommandes INSTEAD OF
+  UPDATE OR
+  INSERT OR
+  DELETE ON DETAILS_COMMANDES FOR EACH ROW 
+  DECLARE 
+  paysTest VARCHAR2(24);
+  BEGIN 
+  if(updating or inserting) then
+    SELECT pays into paystest
+    FROM CLIENTS natural join COMMANDES
+    where no_commande = :new.no_commande;
     end if;
- end if;
- 
- 
- EXCEPTION
-  WHEN NO_DATA_FOUND THEN 
-    RAISE_APPLICATION_ERROR(-20010, 'Erreur : Le client associé à la commande est inconnu.');		--Interception de l'erreur NO_DATA_FOUND (joue le rôle de la contrainte d'intégrité)
- 
-END;
-/
-
-/*
-	Trigger appelé lors d'une action LMD sur la vue 'DétailsCommandes'
-*/
-create or replace TRIGGER modify_DetailsCommandes INSTEAD OF UPDATE OR INSERT or delete ON details_commandes
-FOR EACH ROW
-DECLARE
-clientCountry Clients.pays%Type;
-BEGIN
-	
-  IF INSERTING  THEN          --Insertion à contrôler : on ne peut pas ajouter des détails de commandes d'un client étranger (on ne travaille que sur les clients locaux)
-	
-	SELECT DISTINCT c.pays INTO clientCountry
-	FROM Commandes NATURAL JOIN Clients c
-	WHERE CODE_CLIENT = (
-		SELECT CODE_CLIENT FROM Commandes c2 WHERE c2.NO_COMMANDE = :new.NO_COMMANDE
-	);
-	
-     IF NOT (clientCountry in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
-    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
-    'Autriche', 'Suisse')) THEN
-        RAISE_APPLICATION_ERROR(-20009, 'Erreur : le client de la commande renseignée ne se trouve pas dans la bonne région.');
-    else
-      INSERT INTO DETAILS_Commandeses 
-      VALUES (:new.NO_COMMANDE, :new.REF_PRODUIT, :new.PRIX_UNITAIRE, :new.QUANTITE, :new.REMISE);
-    end if;  
-  end if;
-  
-  IF UPDATING THEN          -- Modification à contrôler : on ne peut pas modifier les données d'un détail de commande d'un client étranger !
-  	
-	SELECT DISTINCT c.pays INTO clientCountry
-	FROM Commandes NATURAL JOIN Clients c
-	WHERE CODE_CLIENT = (
-		SELECT CODE_CLIENT FROM Commandes c2 WHERE c2.NO_COMMANDE = :new.NO_COMMANDE
-	);
-	
-     IF NOT (clientCountry in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
-    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
-    'Autriche', 'Suisse')) THEN
-      RAISE_APPLICATION_ERROR(-20009, 'Erreur : le client de la commande renseignée ne se trouve pas dans la bonne région.');
-      else
-        update DETAILS_Commandeses          
-        set 
-        NO_COMMANDE = :new.NO_COMMANDE,
-        REF_PRODUIT = :NEW.REF_PRODUIT,
-        PRIX_UNITAIRE = :new.PRIX_UNITAIRE,
-        QUANTITE = :new.QUANTITE,
-        REMISE = :new.REMISE
-        where NO_COMMANDE = :old.NO_COMMANDE AND REF_PRODUIT=:old.REF_PRODUIT;
-      end if;
+    
+  IF INSERTING THEN         --Insertion à contrôler
+        
+    IF (paysTest   IN ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) THEN
+      INSERT
+      INTO cpottiez.DETAILS_COMMANDESEN@dblinkmain VALUES
+        (
+          :new.no_commande,
+          :new.ref_produit,
+          :new.prix_unitaire,
+          :new.quantite,
+          :new.remise
+        );
+    ELSIF (paysTest IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse')) THEN
+      INSERT
+      INTO details_commandesES VALUES
+        (
+          :new.no_commande,
+          :new.ref_produit,
+          :new.prix_unitaire,
+          :new.quantite,
+          :new.remise
+        );
+    ELSIF (paysTest IN('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil', 'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique', 'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique', 'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie', 'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay', 'Venezuela')) THEN
+      INSERT
+      INTO hcburca.Details_Commandes_AM@dbLinkUS VALUES
+        (
+          :new.no_commande,
+          :new.ref_produit,
+          :new.prix_unitaire,
+          :new.quantite,
+          :new.remise
+        );
+    ELSE
+      INSERT
+      INTO cpottiez.details_commandesOI@dblinkmain VALUES
+        (
+          :new.no_commande,
+          :new.ref_produit,
+          :new.prix_unitaire,
+          :new.quantite,
+          :new.remise
+        );
+    END IF;
   END IF;
-  
- IF deleting THEN       --Suppression à vérifier : on ne peut pas supprimer des détails de commandes d'un client étranger (on ne travaille que sur les clients locaux)
- 	
-	SELECT DISTINCT c.pays INTO clientCountry
-	FROM Commandes NATURAL JOIN Clients c
-	WHERE CODE_CLIENT = (
-		SELECT CODE_CLIENT FROM Commandes c2 WHERE c2.NO_COMMANDE = :old.NO_COMMANDE
-	);
- 
-    IF NOT (clientCountry in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
-    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
-    'Autriche', 'Suisse')) THEN
-        RAISE_APPLICATION_ERROR(-20009, 'Erreur : le client de la commande renseignée ne se trouve pas dans la bonne région.');
-    else
-      delete from DETAILS_Commandeses where NO_COMMANDE = :old.NO_COMMANDE AND REF_PRODUIT=:old.REF_PRODUIT;
-    end if;
- end if;
- 
- 
- EXCEPTION
-  WHEN NO_DATA_FOUND THEN 
-    RAISE_APPLICATION_ERROR(-20010, 'Erreur : Le client associé à la commande est inconnu.');		--Interception de l'erreur NO_DATA_FOUND (joue le rôle de la contrainte d'intégrité)
- 
+  IF UPDATING THEN -- Modification à contrôler : on ne peut pas modifier les données d'un stock non local !
+    IF(:old.ref_produit= :new.ref_produit AND :old.NO_COMMANDE= :new.no_commande) then
+      IF (paysTest IN ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) THEN
+        UPDATE cpottiez.DETAILS_COMMANDESEN@dblinkmain
+        SET ref_produit   = :new.ref_produit,
+          NO_COMMANDE     = :new.no_commande,
+          PRIX_UNITAIRE   = :new.PRIX_UNITAIRE,
+          QUANTITE        = :new.QUANTITE,
+          REMISE          = :new.REMISE
+        WHERE ref_produit = :old.ref_produit
+        AND no_commande   = :old.no_commande;
+      ELSIF (paysTest IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse')) THEN
+        UPDATE details_commandesES
+        SET ref_produit   = :new.ref_produit,
+          NO_COMMANDE     = :new.no_commande,
+          PRIX_UNITAIRE   = :new.PRIX_UNITAIRE,
+          QUANTITE        = :new.QUANTITE,
+          REMISE          = :new.REMISE
+        WHERE ref_produit = :old.ref_produit
+        AND no_commande   = :old.no_commande;
+      ELSIF (paysTest IN('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil', 'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique', 'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique', 'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie', 'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay', 'Venezuela')) THEN
+        UPDATE hcburca.Details_Commandes_AM@dbLinkUS
+        SET ref_produit   = :new.ref_produit,
+          NO_COMMANDE     = :new.no_commande,
+          PRIX_UNITAIRE   = :new.PRIX_UNITAIRE,
+          QUANTITE        = :new.QUANTITE,
+          REMISE          = :new.REMISE
+        WHERE ref_produit = :old.ref_produit
+        AND no_commande   = :old.no_commande;
+      ELSE
+        UPDATE cpottiez.details_commandesOI@dblinkmain
+        SET ref_produit   = :new.ref_produit,
+          NO_COMMANDE     = :new.no_commande,
+          PRIX_UNITAIRE   = :new.PRIX_UNITAIRE,
+          QUANTITE        = :new.QUANTITE,
+          REMISE          = :new.REMISE
+        WHERE ref_produit = :old.ref_produit
+        AND no_commande   = :old.no_commande;
+      END IF;
+    END IF;
+  END IF;
+  IF DELETING THEN 
+   
+--   DBMS_OUTPUT.PUT_LINE(:old.no_commande||' - ' || :old.ref_produit); 
+    SELECT pays into paysTest
+    FROM CLIENTS natural join COMMANDES
+    where no_commande = :old.no_commande;
+        
+   IF (paysTest  IN ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) THEN
+      DELETE
+      FROM cpottiez.DETAILS_COMMANDESEN@dblinkmain
+      WHERE ref_produit = :old.ref_produit
+      AND no_commande   = :old.no_commande;
+      
+      ELSIF (paysTest IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse')) THEN
+      
+      DELETE
+      FROM details_commandesES
+      WHERE ref_produit = :old.ref_produit
+      AND no_commande   = :old.no_commande;
+    ELSIF (paysTest IN('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil', 'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique', 'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique', 'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie', 'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay', 'Venezuela')) THEN
+      DELETE
+      FROM hcburca.Details_Commandes_AM@dbLinkUS
+      WHERE ref_produit = :old.ref_produit
+      AND no_commande   = :old.no_commande;
+    ELSE
+      DELETE
+      FROM cpottiez.details_commandesOI@dblinkmain
+      WHERE ref_produit = :old.ref_produit
+      AND no_commande   = :old.no_commande;
+    END IF;
+  END IF;
 END;
+

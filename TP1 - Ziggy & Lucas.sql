@@ -71,20 +71,20 @@ GRANT SELECT, update, insert, delete ON stockES to hcburca;
 /*
   Permissions accordées : PRODUITS (lecture seule depuis les applications externes)
 */
-GRANT select ON produits to cpottiez;
-GRANT select ON produits to hhamelin;
-GRANT select ON produits to zvergne;
-GRANT select ON produits to jcharlesni;
-GRANT select ON produits to hcburca;
+GRANT SELECT, update, insert, delete ON produits to cpottiez;
+GRANT SELECT, update, insert, delete ON produits to hhamelin;
+GRANT SELECT, update, insert, delete ON produits to zvergne;
+GRANT SELECT, update, insert, delete ON produits to jcharlesni;
+GRANT SELECT, update, insert, delete ON produits to hcburca;
 
 /*
   Permissions accordées : CATEGORIES (lecture seule depuis les applications externes)
 */
-GRANT select ON categories to cpottiez;
-GRANT select ON categories to hhamelin;
-GRANT select ON categories to zvergne;
-GRANT select ON categories to jcharlesni;
-GRANT select ON categories to hcburca;
+GRANT SELECT, update, insert, delete ON categories to cpottiez;
+GRANT SELECT, update, insert, delete ON categories to hhamelin;
+GRANT SELECT, update, insert, delete ON categories to zvergne;
+GRANT SELECT, update, insert, delete ON categories to jcharlesni;
+GRANT SELECT, update, insert, delete ON categories to hcburca;
 
 /*
   Permissions accordées : DETAILS_COMMANDESES (lecture seule depuis les applications externes)
@@ -221,6 +221,7 @@ SELECT * FROM hcburca.Commandes_AM@dbLinkUS
 );
 
 
+
 -- Vue 'Details_Commande'
 CREATE OR REPLACE VIEW details_commandes
 AS
@@ -339,6 +340,8 @@ insert into produits values(89, 'starwax', 118, 1,12,45);    --Ne fonctionne pas
 /*
   Tests : insertion dans la vue stock
 */
+
+
 select * from stock;
 desc stock;
 insert into stock values (2, 'Portugal', 4, 6 ,0);       --Fonctionne : le pays est en adéquation avec la relation fragmentée (stocks d'Europe du Sud)
@@ -347,5 +350,95 @@ delete from stock where ref_produit=2 and pays='Portugal';    -- Fonctionne : le
 insert into stock values (2, 'Allemagne', 4, 6 ,0);   --Ne fonctionne pas : le pays n'appartient pas à l'Europe du Sud
 delete from stock where ref_produit = 1 and pays = 'Allemagne';  --Ne fonctionne pas : le pays n'appartient pas à l'Europe du Sud
 
+select count(*) from produits;
+select count(*) from categories;
+select count(*) from fournisseurs;
+select count(*) from employes;
 
+desc clients;
+insert into clients values ('cli', 'test', '1, rue des fleurs','Zürick','1200', 'Allemagne', '1', '1');  --Insertion fonctionnelle
+delete from clients where code_client='cli';
+select * from cpottiez.clientsen@dblinkmain
+commit;
+insert into clients values ('cli2', 'test', '1, rue des fleurs','Zürick','1200', 'Monaco', '1', '1');
+commit;
+delete from clients where code_client = 'cli2';
+commit;
+update clients set societe='ze'  where code_client='cli';
+commit;
+select * from clients where code_client='cli';  -- MAJ visible
+select * from clients where code_client='cli2'; -- Suppression visible
+
+select * from commandes;
+desc stock;
+
+insert into stock values(1, 'Danemark', 4 ,2,2);    --Insertion fonctionnelle
+commit;
+select * from stock;      --Insertion visible
+
+insert into stock values(1, 'Panama', 4 ,2,2);    --Insertion fonctionnelle
+commit;
+set serveroutput on;
+insert into stock values(1, 'France', 4 ,2,2);
+delete from stock where ref_produit=1 and pays='Panama';
+rollback;
+select * from stock;      -- Valeur non supprimée
+set serveroutput on;
+delete from stock where ref_produit=1 and pays='France';
+select * from stock;
+commit;
+select * from stock;      -- Valeur supprimée
+
+desc commandes;
+insert into commandes values (33, 'OTTIK', 1, sysdate, sysdate,5);
+select * from commandes;
+delete from commandes where no_commande=33;
+select * from clients;
+
+select * from commandes;
+desc details_commandes;
+
+insert into details_commandes 
+values (5000,2, 5,4, 5);
+
+select * from details_commandes;
+commit;
+
+delete from details_commandes where no_commande=10251 and ref_produit=22;
+update details_commandes
+set quantite = 0
+where no_commande = 5000 and ref_produit=1;
+
+set serveroutput on;
+delete from details_commandes
+where no_commande = 5000 and ref_produit=1; 
+
+
+
+    SELECT pays 
+    -- into paysTest
+    FROM CLIENTS natural join COMMANDES
+    where no_commande = 5000 --:old.no_commande
+    ;
+    
+    --Creation des materialized views
+  
+  
+  CREATE MATERIALIZED VIEW FournisseursMat
+  Refresh complete
+  next sysdate +(1/24/60)
+  as select * 
+  from cpottiez.fournisseurs@dblinkMain;
+select * from FournisseursMat;
+insert into fournisseursMat values(1337,'ZCorp','1337 rue du swag','JMP Town',69100,'France','String','UnString'); --Does not work
+
+  CREATE MATERIALIZED VIEW FournisseursMat
+  Refresh complete
+  next sysdate +(1/24/60)
+  as select * 
+  from cpottiez.fournisseurs@dblinkMain;
+select * from FournisseursMat;
+insert into fournisseursMat values(1337,'ZCorp','1337 rue du swag','JMP Town',69100,'France','String','UnString'); --Does not work
+
+Drop Materialized view FournisseursMat;
 
