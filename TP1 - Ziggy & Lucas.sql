@@ -1,4 +1,3 @@
-drop database link dblinkMain;
 /*
   Liens de BDD
 */
@@ -7,15 +6,17 @@ CREATE DATABASE LINK dbLinkUS CONNECT TO lpoisse IDENTIFIED BY mdporacle USING '
 
 
 /*
-  CrÈation de la table clients de l'europe du Sud AVEC Autriche/Suisse
+  Cr√©ation de la table clients de l'europe du Sud AVEC Autriche/Suisse
 */
 CREATE TABLE clientsES as 
 (SELECT * FROM ryori.clients@dblinkMain 
 WHERE pays IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse'));
 
-select * from cpottiez.fournisseurs@dblinkMain;
+
+
+
 /*
-  CrÈation de la table commandes de l'europe du Sud
+  Cr√©ation de la table commandes de l'europe du Sud
 */
 CREATE TABLE commandesES as 
 (
@@ -25,8 +26,9 @@ SELECT * FROM ryori.commandes@dblinkMain com NATURAL JOIN ryori.clients@dblinkMa
 WHERE cli.pays IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse'))
 ));
 
+
 /*
-  CrÈation de la table dÈtails des commandes de l'europe du Sud
+  Cr√©ation de la table d√©tails des commandes de l'europe du Sud
 */
 CREATE TABLE details_commandesES as 
 (
@@ -38,29 +40,31 @@ WHERE cli.pays IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Ita
 
 
 /*
-  CrÈation de la table dÈtails des commandes de l'europe du Sud
+  Cr√©ation de la table stock de l'europe du Sud
 */
 CREATE TABLE stockES as 
 (
 SELECT * from ryori.stock@dblinkMain  
 WHERE pays IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse'));
 
+
 /*
-  CrÈation de la table Produits ‡ partir de l'originale 
+  Cr√©ation de la table Produits √† partir de l'originale 
 */
 CREATE TABLE produits as 
 (
 SELECT * from ryori.produits@dblinkMain);
 
+
 /*
-  CrÈation de la table CatÈgories ‡ partir de l'originale 
+  Cr√©ation de la table Categories √† partir de l'originale 
 */
 CREATE TABLE CATEGORIES as 
 (
 SELECT * from ryori.CATEGORIES@dblinkMain);
 
 /*
-  Permissions accordÈes : STOCKES (lecture seule depuis les applications externes)
+  Permissions accord√©es : STOCKES (lecture/mise √† jour/insertion/suppression depuis les applications externes)
 */
 GRANT SELECT, update, insert, delete ON stockES to cpottiez;
 GRANT SELECT, update, insert, delete ON stockES to hhamelin;
@@ -69,7 +73,7 @@ GRANT SELECT, update, insert, delete ON stockES to jcharlesni;
 GRANT SELECT, update, insert, delete ON stockES to hcburca;
 
 /*
-  Permissions accordÈes : PRODUITS (lecture seule depuis les applications externes)
+  Permissions accord√©es : PRODUITS (lecture/mise √† jour/insertion/suppression depuis les applications externes)
 */
 GRANT SELECT, update, insert, delete ON produits to cpottiez;
 GRANT SELECT, update, insert, delete ON produits to hhamelin;
@@ -78,7 +82,7 @@ GRANT SELECT, update, insert, delete ON produits to jcharlesni;
 GRANT SELECT, update, insert, delete ON produits to hcburca;
 
 /*
-  Permissions accordÈes : CATEGORIES (lecture seule depuis les applications externes)
+  Permissions accord√©es : CATEGORIES (lecture/mise √† jour/insertion/suppression depuis les applications externes)
 */
 GRANT SELECT, update, insert, delete ON categories to cpottiez;
 GRANT SELECT, update, insert, delete ON categories to hhamelin;
@@ -87,7 +91,7 @@ GRANT SELECT, update, insert, delete ON categories to jcharlesni;
 GRANT SELECT, update, insert, delete ON categories to hcburca;
 
 /*
-  Permissions accordÈes : DETAILS_COMMANDESES (lecture seule depuis les applications externes)
+  Permissions accord√©es : DETAILS_COMMANDESES (lecture/mise √† jour/insertion/suppression depuis les applications externes)
 */
 GRANT SELECT, update, insert, delete ON details_commandeses to cpottiez;
 GRANT SELECT, update, insert, delete ON details_commandeses to hhamelin;
@@ -96,7 +100,7 @@ GRANT SELECT, update, insert, delete ON details_commandeses to jcharlesni;
 GRANT SELECT, update, insert, delete ON details_commandeses to hcburca;
 
 /*
-  Permissions accordÈes : COMMANDESES (lecture seule depuis les applications externes)
+  Permissions accord√©es : COMMANDESES (lecture/mise √† jour/insertion/suppression depuis les applications externes)
 */
 GRANT SELECT, update, insert, delete on commandeses TO cpottiez;
 GRANT SELECT, update, insert, delete on commandeses TO hhamelin;
@@ -105,7 +109,7 @@ GRANT SELECT, update, insert, delete on commandeses TO jcharlesni;
 GRANT SELECT, update, insert, delete on commandeses TO hcburca;
 
 /*
-  Permissions accordÈes : CLIENTSES (lecture seule depuis les applications externes)
+  Permissions accord√©es : CLIENTSES (lecture/mise √† jour/insertion/suppression depuis les applications externes)
 */
 GRANT SELECT, update, insert, delete on clientses TO cpottiez;
 GRANT SELECT, update, insert, delete on clientses TO hhamelin;
@@ -114,7 +118,7 @@ GRANT SELECT, update, insert, delete on clientses TO jcharlesni;
 GRANT SELECT, update, insert, delete on clientses TO hcburca;
 
 /*
-  Contraintes : clÈs primaires
+  Contraintes : cl√©s primaires
 */
 desc clientsES;
 ALTER TABLE clientsES ADD CONSTRAINT pk_clientsES PRIMARY KEY (CODE_CLIENT);
@@ -152,7 +156,7 @@ ALTER TABLE stockes ADD CONSTRAINT chk_stockespays CHECK (pays IS NOT NULL);
 /
 
 /*
-  Trigger : "clÈs ÈtrangËres"/prÈdicats de vÈrification ‡ l'insertion
+  Trigger : "cl√©s √©trang√®res"/pr√©dicats de v√©rification √† l'insertion
 */
 CREATE OR REPLACE TRIGGER chkInsert_Commandes BEFORE INSERT OR UPDATE ON CommandesES
 FOR EACH ROW
@@ -166,13 +170,13 @@ BEGIN
   
 EXCEPTION
   WHEN NO_DATA_FOUND THEN 
-    RAISE_APPLICATION_ERROR(-20001, 'Erreur : tout employÈ rÈfÈrencÈ doit exister dans la table des employÈs');
+    RAISE_APPLICATION_ERROR(-20001, 'Erreur : tout employ√© r√©f√©renc√© doit exister dans la table des employ√©s');
 END;
 /
-desc details_commandeses;
+
 
 /*
-  FK possibles pour assurer les clÈs ÈtrangËres locales
+  FK possibles pour assurer les cl√©s √©trang√®res locales
 */
 
 alter table details_commandeses add constraint fk_detailscmdesproduits foreign key (REF_PRODUIT) REFERENCES Produits;
@@ -183,18 +187,18 @@ alter table Commandeses add constraint FK_CommandesesClientses foreign key (code
 
 
 /*
-  CrÈation des vues
+  Cr√©ation des vues
 */
--- Vue "Stock", crÈation avec WHERE pour optimiser le plan d'exÈcution
+-- Vue "Stock", cr√©ation avec WHERE pour optimiser le plan d'ex√©cution
 CREATE OR REPLACE VIEW Stock
 AS
 (SELECT * FROM StockES where StockES.PAYS in 
 ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
     'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
     'Autriche', 'Suisse')
-UNION
+UNION ALL
 SELECT * FROM cpottiez.stockEN@dblinkMain where pays in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')
-UNION 
+UNION ALL
 SELECT * FROM cpottiez.stockOI@dblinkMain where pays not in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
   'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
   'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
@@ -204,7 +208,7 @@ SELECT * FROM cpottiez.stockOI@dblinkMain where pays not in ('Antigua-et-Barbuda
   and pays not in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
     'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
     'Autriche', 'Suisse')
-UNION 
+UNION ALL
 SELECT * FROM hcburca.stock_am@dbLinkUS where pays in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
   'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
   'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
@@ -216,7 +220,7 @@ SELECT * FROM hcburca.stock_am@dbLinkUS where pays in ('Antigua-et-Barbuda', 'Ar
 
 SELECT * FROM Stock;
 
---Vue 'Clients', crÈation avec WHERE pour optimiser le plan d'exÈcution
+--Vue 'Clients', cr√©ation avec WHERE pour optimiser le plan d'ex√©cution
 
 CREATE OR REPLACE VIEW Clients
 AS
@@ -224,9 +228,9 @@ AS
 ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
     'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
     'Autriche', 'Suisse')
-UNION
+UNION ALL
 SELECT * FROM cpottiez.clientsEN@dblinkMain where pays in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')
-UNION 
+UNION ALL
 SELECT * FROM cpottiez.clientsOI@dblinkMain where pays not in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
   'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
   'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
@@ -236,7 +240,7 @@ SELECT * FROM cpottiez.clientsOI@dblinkMain where pays not in ('Antigua-et-Barbu
   and pays not in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
     'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
     'Autriche', 'Suisse')
-UNION 
+UNION ALL
 SELECT * FROM hcburca.clients_am@dbLinkUS where pays in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
   'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
   'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
@@ -249,11 +253,11 @@ SELECT * FROM hcburca.clients_am@dbLinkUS where pays in ('Antigua-et-Barbuda', '
 CREATE OR REPLACE VIEW Commandes
 AS
 (SELECT * FROM Commandeses 
-UNION
+UNION ALL
 SELECT * FROM cpottiez.commandesEN@dblinkMain
-UNION 
+UNION ALL
 SELECT * FROM cpottiez.commandesOI@dblinkMain
-UNION 
+UNION ALL
 SELECT * FROM hcburca.Commandes_AM@dbLinkUS
 );
 
@@ -263,11 +267,11 @@ SELECT * FROM hcburca.Commandes_AM@dbLinkUS
 CREATE OR REPLACE VIEW details_commandes
 AS
 (SELECT * FROM details_commandeses 
-UNION
+UNION ALL
 SELECT * FROM cpottiez.details_commandesEN@dblinkMain
-UNION 
+UNION ALL
 SELECT * FROM cpottiez.details_commandesOI@dblinkMain
-UNION 
+UNION ALL
 SELECT * FROM hcburca.Details_Commandes_AM@dbLinkUS
 );
 
@@ -276,7 +280,7 @@ CREATE OR REPLACE VIEW Fournisseurs
 AS
 (SELECT * FROM cpottiez.fournisseurs@dblinkmain);
 
--- Vue employÈs
+-- Vue employ√©s
 CREATE OR REPLACE VIEW employes
 AS
 (SELECT * FROM hcburca.Employes@dbLinkUS
@@ -296,14 +300,14 @@ desc produits;
 
 
 /*
-  Trigger : vÈrifie si le fournisseur insÈrÈ dans la table Produits est bien rÈfÈrencÈ
-  VÈrifie au cours de la suppression d'un produit que celui-ci n'est pas dÈj‡ prÈsent dans une des tables DÈtailsCommande ou stocks
+  Trigger : v√©rifie si le fournisseur ins√©r√© dans la table Produits est bien r√©f√©renc√©
+  V√©rifie au cours de la suppression d'un produit que celui-ci n'est pas d√©j√† pr√©sent dans une des tables D√©tailsCommande ou stocks
 */
 CREATE OR REPLACE TRIGGER chk_Produits BEFORE INSERT OR UPDATE OR DELETE ON Produits
 FOR EACH ROW
 DECLARE 
-idFourn number; --Id du fournisseur renseignÈ ‡ vÈrifier
-any_rows_found NUMBER;  --variable indiquant si un produit ‡ supprimer existe dans une table secondaire
+idFourn number; --Id du fournisseur renseign√© √† v√©rifier
+any_rows_found NUMBER;  --variable indiquant si un produit √† supprimer existe dans une table secondaire
 
 BEGIN
 	IF INSERTING OR UPDATING THEN 
@@ -319,7 +323,7 @@ BEGIN
     where ref_produit = :NEW.REF_PRODUIT;
     
     IF any_rows_found <> 0 THEN
-      raise_application_error(-20002, 'Erreur : le produit ‡ supprimer est dÈj‡ rÈfÈrencÈ dans la table DÈtailsCommandes en Europe du Nord');
+      raise_application_error(-20002, 'Erreur : le produit √† supprimer est d√©j√† r√©f√©renc√© dans la table D√©tailsCommandes en Europe du Nord');
     end if;
     
     SELECT count(*) INTO any_rows_found
@@ -327,7 +331,7 @@ BEGIN
     WHERE ref_produit = :NEW.REF_PRODUIT;
     
     IF any_rows_found <> 0 THEN
-      raise_application_error(-20003, 'Erreur : le produit ‡ supprimer est dÈj‡ rÈfÈrencÈ dans la table DÈtailsCommandes pour un pays inconnu');
+      raise_application_error(-20003, 'Erreur : le produit √† supprimer est d√©j√† r√©f√©renc√© dans la table D√©tailsCommandes pour un pays inconnu');
     end if;
     
     SELECT count(*) INTO any_rows_found
@@ -335,7 +339,7 @@ BEGIN
     WHERE ref_produit = :NEW.REF_PRODUIT;
     
     IF any_rows_found <> 0 THEN
-      raise_application_error(-20004, 'Erreur : le produit ‡ supprimer est dÈj‡ rÈfÈrencÈ dans la table DÈtailsCommandes en AmÈrique');
+      raise_application_error(-20004, 'Erreur : le produit √† supprimer est d√©j√† r√©f√©renc√© dans la table D√©tailsCommandes en Am√©rique');
     end if;
     
     SELECT count(*) INTO any_rows_found
@@ -343,7 +347,7 @@ BEGIN
     WHERE ref_produit = :NEW.REF_PRODUIT;
     
     IF any_rows_found <> 0 THEN
-      raise_application_error(-20005, 'Erreur : le produit ‡ supprimer est dÈj‡ rÈfÈrencÈ dans la table Stocks en Europe du Nord');
+      raise_application_error(-20005, 'Erreur : le produit √† supprimer est d√©j√† r√©f√©renc√© dans la table Stocks en Europe du Nord');
     end if;
     
     SELECT count(*) INTO any_rows_found
@@ -351,7 +355,7 @@ BEGIN
     WHERE ref_produit = :NEW.REF_PRODUIT;
     
     IF any_rows_found <> 0 THEN
-      raise_application_error(-20006, 'Erreur : le produit ‡ supprimer est dÈj‡ rÈfÈrencÈ dans la table Stocks pour un pays inconnu');
+      raise_application_error(-20006, 'Erreur : le produit √† supprimer est d√©j√† r√©f√©renc√© dans la table Stocks pour un pays inconnu');
     end if;
     
     
@@ -360,22 +364,22 @@ BEGIN
     WHERE ref_produit = :NEW.REF_PRODUIT;
     
     IF any_rows_found <> 0 THEN
-      raise_application_error(-20007, 'Erreur : le produit ‡ supprimer est dÈj‡ rÈfÈrencÈ dans la table Stocks en AmÈrique');
+      raise_application_error(-20007, 'Erreur : le produit √† supprimer est d√©j√† r√©f√©renc√© dans la table Stocks en Am√©rique');
     end if;
   END IF;
 EXCEPTION
   WHEN NO_DATA_FOUND THEN 
-    RAISE_APPLICATION_ERROR(-20002, 'Erreur : tout fournisseur rÈfÈrencÈ doit exister dans la table des fournisseurs');
+    RAISE_APPLICATION_ERROR(-20002, 'Erreur : tout fournisseur r√©f√©renc√© doit exister dans la table des fournisseurs');
 END;
 /
 
 /*
-  Tests : contrainte d'intÈgritÈ de produits
+  Tests : contrainte d'int√©grit√© de produits
 */
 insert into produits values(89, 'starwax', 12, 1,12,45);    --Fonctionne : le fournisseur 12 existe
 delete from produits where ref_produit=89;      --Fonctionne : le produit existe bien
 insert into produits values(89, 'starwax', 118, 1,12,45);    --Ne fonctionne pas : le fournisseur 118 n'existe pas...
--- A tester : insertion du produit dans stock et/ou details_commande et supprimer le produit ainsi insÈrÈ pour vÈrifier la contrainte d'intÈgritÈ
+-- A tester : insertion du produit dans stock et/ou details_commande et supprimer le produit ainsi ins√©r√© pour v√©rifier la contrainte d'int√©grit√©
 
 
 /*
@@ -385,11 +389,11 @@ insert into produits values(89, 'starwax', 118, 1,12,45);    --Ne fonctionne pas
 
 select * from stock;
 desc stock;
-insert into stock values (2, 'Portugal', 4, 6 ,0);       --Fonctionne : le pays est en adÈquation avec la relation fragmentÈe (stocks d'Europe du Sud)
-delete from stock where ref_produit=2 and pays='Portugal';    -- Fonctionne : le pays a ÈtÈ insÈrÈ
+insert into stock values (2, 'Portugal', 4, 6 ,0);       --Fonctionne : le pays est en ad√©quation avec la relation fragment√©e (stocks d'Europe du Sud)
+delete from stock where ref_produit=2 and pays='Portugal';    -- Fonctionne : le pays a √©t√© ins√©r√©
 
-insert into stock values (2, 'Allemagne', 4, 6 ,0);   --Ne fonctionne pas : le pays n'appartient pas ‡ l'Europe du Sud
-delete from stock where ref_produit = 1 and pays = 'Allemagne';  --Ne fonctionne pas : le pays n'appartient pas ‡ l'Europe du Sud
+insert into stock values (2, 'Allemagne', 4, 6 ,0);   --Ne fonctionne pas : le pays n'appartient pas √† l'Europe du Sud
+delete from stock where ref_produit = 1 and pays = 'Allemagne';  --Ne fonctionne pas : le pays n'appartient pas √† l'Europe du Sud
 
 select count(*) from produits;
 select count(*) from categories;
@@ -397,11 +401,11 @@ select count(*) from fournisseurs;
 select count(*) from employes;
 
 desc clients;
-insert into clients values ('cli', 'test', '1, rue des fleurs','Z¸rick','1200', 'Allemagne', '1', '1');  --Insertion fonctionnelle
+insert into clients values ('cli', 'test', '1, rue des fleurs','Z√ºrick','1200', 'Allemagne', '1', '1');  --Insertion fonctionnelle
 delete from clients where code_client='cli';
 select * from cpottiez.clientsen@dblinkmain
 commit;
-insert into clients values ('cli2', 'test', '1, rue des fleurs','Z¸rick','1200', 'Monaco', '1', '1');
+insert into clients values ('cli2', 'test', '1, rue des fleurs','Z√ºrick','1200', 'Monaco', '1', '1');
 commit;
 delete from clients where code_client = 'cli2';
 commit;
@@ -423,12 +427,12 @@ set serveroutput on;
 insert into stock values(1, 'France', 4 ,2,2);
 delete from stock where ref_produit=1 and pays='Panama';
 rollback;
-select * from stock;      -- Valeur non supprimÈe
+select * from stock;      -- Valeur non supprim√©e
 set serveroutput on;
 delete from stock where ref_produit=1 and pays='France';
 select * from stock;
 commit;
-select * from stock;      -- Valeur supprimÈe
+select * from stock;      -- Valeur supprim√©e
 
 desc commandes;
 insert into commandes values (33, 'OTTIK', 1, sysdate, sysdate,5);
