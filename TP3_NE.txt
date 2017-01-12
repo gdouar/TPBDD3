@@ -290,8 +290,8 @@ BEGIN
 END
 ;
 
--- vérifier si le fournisseurs à supprimer n'est déjà référencé dans la table produits
-CREATE OR REPLACE TRIGGER chk_Fournisseurs BEFORE DELETE ON FOURNISSEURS
+-- vérifier si le fournisseurs à supprimer/mettre à jour n'est déjà référencé dans la table produits
+create or replace TRIGGER chk_Fournisseurs BEFORE DELETE or update ON FOURNISSEURS
 FOR EACH ROW
 DECLARE
 number_of_rows NUMBER; -- nombre de tuples trouvés dans table produit pour le fournisseurs qui doit être supprimé
@@ -302,8 +302,16 @@ BEGIN
     from lpoisse.produits@LinkToDBES
     where NO_FOURNISSEUR = :old.NO_FOURNISSEUR;
 
+  if(deleting) then
     IF number_of_rows <> 0 THEN
       raise_application_error(-20002, 'Erreur : le fournisseur à supprimer est déjà référencé dans la table produits en europe du sud');
+    end if;
+    end if;
+    
+  if(updating) then
+    IF number_of_rows <> 0 THEN
+      raise_application_error(-20002, 'Erreur : le fournisseur à mettre à jour est déjà référencé dans la table produits en europe du sud');
+    end if;
     end if;
 
 END;
