@@ -124,6 +124,31 @@ ALTER TABLE commandes_am ADD CONSTRAINT fkCommandesClients FOREIGN KEY (code_cli
 ALTER TABLE commandes_am ADD CONSTRAINT fkCommandesEmployes FOREIGN KEY (no_employe) REFERENCES Employes(no_employe);
 ALTER TABLE details_commandes_am ADD CONSTRAINT fkDetailsCommandesCommandes FOREIGN KEY (no_commande) REFERENCES Commandes_am(no_commande) ON DELETE CASCADE;
 
+create or replace TRIGGER fkEmployes BEFORE DELETE or update ON Employes
+FOR EACH ROW
+DECLARE
+number_of_rows NUMBER; 
+
+BEGIN
+
+    SELECT count(*) into number_of_rows
+    from Commandes
+    where NO_EMPLOYE = :old.NO_EMPLOYE;
+
+  if(deleting) then
+    IF number_of_rows <> 0 THEN
+      raise_application_error(-20002, 'Erreur : l''employé à supprimer est déjà référencé dans une commande');
+    end if;
+    end if;
+    
+  if(updating) then
+    IF number_of_rows <> 0 THEN
+      raise_application_error(-20002, 'Erreur : l''employé à mettre à jour est déjà référencé dans une commande');
+    end if;
+    end if;
+
+END;
+
 CREATE OR REPLACE TRIGGER FKDETAILSCOMMANDESPRODUITS 
 BEFORE INSERT OR UPDATE ON details_commandes_am 
 FOR EACH ROW
