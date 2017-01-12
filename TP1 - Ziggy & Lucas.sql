@@ -148,6 +148,7 @@ ALTER TABLE DETAILS_Commandeses ADD CONSTRAINT chk_remisenotnull CHECK (remise I
 ALTER TABLE stockes ADD CONSTRAINT chk_stockrefpdtnotnull CHECK (ref_produit IS NOT NULL);
 ALTER TABLE stockes ADD CONSTRAINT chk_stockespays CHECK (pays IS NOT NULL);
 
+
 /
 
 /*
@@ -177,6 +178,8 @@ desc details_commandeses;
 alter table details_commandeses add constraint fk_detailscmdesproduits foreign key (REF_PRODUIT) REFERENCES Produits;
 alter table details_commandeses add constraint fk_detailsCmdeCmde foreign key (no_commande) references commandeses;
 alter table stockES add constraint fk_stockESproduits foreign key (REF_PRODUIT) REFERENCES Produits;
+alter table Produits add constraint fk_ProduitsCategories foreign key (code_categorie) references categories;
+alter table Commandeses add constraint FK_CommandesesClientses foreign key (code_client) references clientses;
 
 
 /*
