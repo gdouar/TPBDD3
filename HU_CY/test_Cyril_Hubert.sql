@@ -52,7 +52,7 @@ DELETE FROM STOCK where pays='Pays-Bas';
 
 insert into STOCK VALUES (2,'Chili',17,40,0);
 SELECT * FROM hcburca.stock_am@LinkToDBUS where pays='Chili';
-update STOCK SET UNITES_COMMANDEES=50 where pays='Chili' and REF_PRODUIT=2; -- impossible de maj: étrange...
+update STOCK SET INDISPONIBLE=-1 where pays='Chili' and REF_PRODUIT=2; -- impossible de maj: étrange...
 DELETE FROM STOCK where pays='Chili' and REF_PRODUIT=2; --impossible de supprimer... manque de permission
 
 insert into STOCK VALUES (2,'Russie',17,40,0);
