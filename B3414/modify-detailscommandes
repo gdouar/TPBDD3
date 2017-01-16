@@ -1,0 +1,130 @@
+create or replace TRIGGER MODIFY_DETAILSCOMMANDES 
+INSTEAD OF DELETE OR INSERT OR UPDATE ON DETAILS_COMMANDES 
+DECLARE 
+
+  paysTest VARCHAR2(24);
+
+BEGIN 
+  if(updating or inserting) then
+    SELECT pays into paystest
+    FROM CLIENTS natural join COMMANDES
+    where no_commande = :new.no_commande;
+  elsif (deleting) then
+    SELECT pays into paysTest
+    FROM CLIENTS natural join COMMANDES
+    where no_commande = :old.no_commande;
+  end if;
+    
+  IF INSERTING THEN         --Insertion à contrôler    
+    dbms_output.put_line('inserting ' ||' - ' || :new.ref_produit);
+    IF (paysTest   IN ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) THEN
+      INSERT
+      INTO cpottiez.DETAILS_COMMANDESEN@tplink VALUES
+        (
+          :new.no_commande,
+          :new.ref_produit,
+          :new.prix_unitaire,
+          :new.quantite,
+          :new.remise
+        );
+    ELSIF (paysTest IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse')) THEN
+      INSERT
+      INTO lpoisse.details_commandesES@linkES VALUES
+        (
+          :new.no_commande,
+          :new.ref_produit,
+          :new.prix_unitaire,
+          :new.quantite,
+          :new.remise
+        );
+    ELSIF (paysTest IN('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil', 'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique', 'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique', 'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie', 'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay', 'Venezuela')) THEN
+      INSERT
+      INTO Details_Commandes_AM VALUES
+        (
+          :new.no_commande,
+          :new.ref_produit,
+          :new.prix_unitaire,
+          :new.quantite,
+          :new.remise
+        );
+    ELSE
+      INSERT
+      INTO cpottiez.details_commandesOI@tplink VALUES
+        (
+          :new.no_commande,
+          :new.ref_produit,
+          :new.prix_unitaire,
+          :new.quantite,
+          :new.remise
+        );
+    END IF;
+  END IF;
+  IF UPDATING THEN -- Modification à contrôler : on ne peut pas modifier les données d'un stock non local !
+  dbms_output.put_line('updating ' || :old.ref_produit||' - ' || :new.ref_produit);
+    IF(:old.ref_produit= :new.ref_produit AND :old.NO_COMMANDE= :new.no_commande) then
+      IF (paysTest IN ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) THEN
+        UPDATE cpottiez.DETAILS_COMMANDESEN@tplink
+        SET ref_produit   = :new.ref_produit,
+          NO_COMMANDE     = :new.no_commande,
+          PRIX_UNITAIRE   = :new.PRIX_UNITAIRE,
+          QUANTITE        = :new.QUANTITE,
+          REMISE          = :new.REMISE
+        WHERE ref_produit = :old.ref_produit
+        AND no_commande   = :old.no_commande;
+      ELSIF (paysTest IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse')) THEN
+        UPDATE lpoisse.details_commandesES@linkES
+        SET ref_produit   = :new.ref_produit,
+          NO_COMMANDE     = :new.no_commande,
+          PRIX_UNITAIRE   = :new.PRIX_UNITAIRE,
+          QUANTITE        = :new.QUANTITE,
+          REMISE          = :new.REMISE
+        WHERE ref_produit = :old.ref_produit
+        AND no_commande   = :old.no_commande;
+      ELSIF (paysTest IN('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil', 'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique', 'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique', 'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie', 'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay', 'Venezuela')) THEN
+        UPDATE Details_Commandes_AM
+        SET ref_produit   = :new.ref_produit,
+          NO_COMMANDE     = :new.no_commande,
+          PRIX_UNITAIRE   = :new.PRIX_UNITAIRE,
+          QUANTITE        = :new.QUANTITE,
+          REMISE          = :new.REMISE
+        WHERE ref_produit = :old.ref_produit
+        AND no_commande   = :old.no_commande;
+      ELSE
+        UPDATE cpottiez.details_commandesOI@tplink
+        SET ref_produit   = :new.ref_produit,
+          NO_COMMANDE     = :new.no_commande,
+          PRIX_UNITAIRE   = :new.PRIX_UNITAIRE,
+          QUANTITE        = :new.QUANTITE,
+          REMISE          = :new.REMISE
+        WHERE ref_produit = :old.ref_produit
+        AND no_commande   = :old.no_commande;
+      END IF;
+    END IF;
+  END IF;
+  IF DELETING THEN        
+  dbms_output.put_line('deleting ' || :old.ref_produit);
+   IF (paysTest  IN ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) THEN
+      DELETE
+      FROM cpottiez.DETAILS_COMMANDESEN@tplink
+      WHERE ref_produit = :old.ref_produit
+      AND no_commande   = :old.no_commande;
+      
+      ELSIF (paysTest IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse')) THEN
+      
+      DELETE
+      FROM lpoisse.details_commandesES@linkES
+      WHERE ref_produit = :old.ref_produit
+      AND no_commande   = :old.no_commande;
+    ELSIF (paysTest IN('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil', 'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique', 'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique', 'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie', 'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay', 'Venezuela')) THEN
+      DELETE
+      FROM Details_Commandes_AM
+      WHERE ref_produit = :old.ref_produit
+      AND no_commande   = :old.no_commande;
+    ELSE
+      DELETE
+      FROM cpottiez.details_commandesOI@tplink
+      WHERE ref_produit = :old.ref_produit
+      AND no_commande   = :old.no_commande;
+    END IF;
+  END IF;
+END;

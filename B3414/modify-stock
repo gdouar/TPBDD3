@@ -1,0 +1,100 @@
+create or replace TRIGGER MODIFY_STOCK 
+INSTEAD OF DELETE OR INSERT OR UPDATE ON STOCK
+BEGIN
+
+  IF INSERTING THEN --Insertion à contrôler
+    IF (:NEW.pays IN ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) THEN
+      INSERT
+      INTO cpottiez.stocken@tplink VALUES
+      (
+        :new.ref_produit,
+        :new.pays,
+        :new.unites_stock,
+        :new.unites_commandees,
+        :new.indisponible
+      );
+    ELSIF (:NEW.pays IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse')) THEN
+      INSERT
+      INTO lpoisse.stockes@linkES VALUES
+      (
+        :new.ref_produit,
+        :new.pays,
+        :new.unites_stock,
+        :new.unites_commandees,
+        :new.indisponible
+      );
+    ELSIF (:NEW.pays IN('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil', 'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique', 'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique', 'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie', 'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay', 'Venezuela')) THEN
+      INSERT
+      INTO stock_am VALUES
+      (
+        :new.ref_produit,
+        :new.pays,
+        :new.unites_stock,
+        :new.unites_commandees,
+        :new.indisponible
+      );
+    ELSE
+      INSERT
+      INTO cpottiez.stockOI@tplink VALUES
+      (
+        :new.ref_produit,
+        :new.pays,
+        :new.unites_stock,
+        :new.unites_commandees,
+        :new.indisponible
+      );
+    END IF;
+  END IF;
+  
+  IF UPDATING THEN -- Modification à contrôler : on ne peut pas modifier les données d'un stock non local !
+    IF (:NEW.pays IN ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) THEN
+      UPDATE cpottiez.stocken@tplink
+      SET ref_produit 	= :new.ref_produit,
+        PAYS          	= :NEW.PAYS,
+        UNITES_STOCK  	= :new.UNITES_STOCK,
+        UNITES_COMMANDEES = :new.UNITES_COMMANDEES,
+        INDISPONIBLE  	= :new.INDISPONIBLE
+      WHERE ref_produit   = :old.ref_produit
+      AND pays        	= :old.PAYS;
+    ELSIF (:NEW.pays IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse')) THEN
+      UPDATE lpoisse.stockes@linkES
+      SET ref_produit 	= :new.ref_produit,
+        PAYS          	= :NEW.PAYS,
+        UNITES_STOCK  	= :new.UNITES_STOCK,
+        UNITES_COMMANDEES = :new.UNITES_COMMANDEES,
+        INDISPONIBLE  	= :new.INDISPONIBLE
+      WHERE ref_produit   = :old.ref_produit
+      AND pays        	= :old.PAYS;
+    ELSIF (:NEW.pays IN('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil', 'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique', 'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique', 'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie', 'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay', 'Venezuela')) THEN
+      UPDATE stock_am
+      SET ref_produit 	= :new.ref_produit,
+        PAYS          	= :NEW.PAYS,
+        UNITES_STOCK  	= :new.UNITES_STOCK,
+        UNITES_COMMANDEES = :new.UNITES_COMMANDEES,
+        INDISPONIBLE  	= :new.INDISPONIBLE
+      WHERE ref_produit   = :old.ref_produit
+      AND pays        	= :old.PAYS;
+    ELSE
+      UPDATE cpottiez.stockOI@tplink
+      SET ref_produit 	= :new.ref_produit,
+        PAYS          	= :NEW.PAYS,
+        UNITES_STOCK  	= :new.UNITES_STOCK,
+        UNITES_COMMANDEES = :new.UNITES_COMMANDEES,
+        INDISPONIBLE  	= :new.INDISPONIBLE
+      WHERE ref_produit   = :old.ref_produit
+      AND pays        	= :old.PAYS;
+    END IF;
+  END IF;
+  
+  IF DELETING THEN --Suppression à vérifier ; on ne peut pas supprimer un stock ne faisant pas partie de la région du site (gestion du stock LOCAL seulement)
+    IF (:old.pays IN ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) THEN
+        DELETE FROM cpottiez.stocken@tplink WHERE ref_produit = :old.ref_produit AND pays = :old.pays;
+    ELSIF (:old.pays IN ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 'Autriche', 'Suisse')) THEN
+        DELETE FROM lpoisse.stockes@linkES WHERE ref_produit = :old.ref_produit AND pays = :old.pays;
+    ELSIF (:old.pays IN('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil', 'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique', 'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique', 'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie', 'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay', 'Venezuela')) THEN
+      DELETE FROM stock_am WHERE ref_produit = :old.ref_produit AND pays = :old.pays;
+    ELSE
+      DELETE FROM cpottiez.stockOI@tplink WHERE ref_produit = :old.ref_produit AND pays = :old.pays;
+    END IF;
+  END IF;
+END;

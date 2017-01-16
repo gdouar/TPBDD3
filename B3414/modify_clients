@@ -1,0 +1,117 @@
+create or replace TRIGGER MODIFY_CLIENTS 
+INSTEAD OF DELETE OR INSERT OR UPDATE ON CLIENTS
+BEGIN
+IF INSERTING then 
+  IF (:NEW.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+                    'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+                    'Autriche', 'Suisse')) THEN
+    
+      INSERT INTO lpoisse.Clientses@linkES 
+      VALUES (:new.code_client,:new.societe, :new.adresse, :new.ville, :new.code_postal, :new.pays, :new.telephone, :new.fax);
+     
+   ELSIF (:new.pays in  ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+                         'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+                         'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+                         'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+                         'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+                         'Venezuela')) then
+                         
+         INSERT INTO Clients_am 
+         VALUES (:new.code_client,:new.societe, :new.adresse, :new.ville, :new.code_postal, :new.pays, :new.telephone, :new.fax);
+
+      ELSIF  (:new.pays in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas'))
+        then
+        
+         INSERT INTO cpottiez.ClientsEN@tplink
+         VALUES (:new.code_client,:new.societe, :new.adresse, :new.ville, :new.code_postal, :new.pays, :new.telephone, :new.fax);
+
+      else
+         INSERT INTO cpottiez.ClientsOI@tplink
+          VALUES (:new.code_client,:new.societe, :new.adresse, :new.ville, :new.code_postal, :new.pays, :new.telephone, :new.fax);
+    end if;
+	END IF;
+  
+  if UPDATING THEN
+    if(:New.pays <> :OLD.pays) then
+      RAISE_APPLICATION_ERROR(-20010,'Attention, vous n''êtes pas autorisé à changer le pays de l''entreprise');
+    end if;
+    IF (:NEW.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+                      'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+                      'Autriche', 'Suisse')) THEN
+      update lpoisse.clientses@linkES          
+      set 
+        code_client = :new.code_client,
+        societe = :NEW.societe,
+        adresse = :new.adresse,
+        ville = :new.ville,
+        code_postal = :new.code_postal,
+        pays = :new.pays,
+        telephone = :new.telephone,
+        fax = :new.fax
+      WHERE code_client = :old.code_client;
+    ELSIF  (:new.pays in ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+                          'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+                          'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+                          'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+                          'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+                          'Venezuela')) then
+      update clients_am         
+      set 
+        code_client = :new.code_client,
+        societe = :NEW.societe,
+        adresse = :new.adresse,
+        ville = :new.ville,
+        code_postal = :new.code_postal,
+        pays = :new.pays,
+        telephone = :new.telephone,
+        fax = :new.fax
+      WHERE code_client = :old.code_client;
+    ELSIF  (:new.pays in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 'Irlande', 
+                          'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas')) then
+      update cpottiez.clientsen@tplink         
+      set 
+        code_client = :new.code_client,
+        societe = :NEW.societe,
+        adresse = :new.adresse,
+        ville = :new.ville,
+        code_postal = :new.code_postal,
+        pays = :new.pays,
+        telephone = :new.telephone,
+        fax = :new.fax
+      WHERE code_client = :old.code_client;
+    else
+      update cpottiez.clientsoi@tplink          
+      set 
+        code_client = :new.code_client,
+        societe = :NEW.societe,
+        adresse = :new.adresse,
+        ville = :new.ville,
+        code_postal = :new.code_postal,
+        pays = :new.pays,
+        telephone = :new.telephone,
+        fax = :new.fax
+      WHERE code_client = :old.code_client;
+    end if;
+  end if;
+  
+  IF DELETING THEN
+    IF  (:old.pays in ('Espagne', 'Portugal', 'Andorre', 'France', 'Gibraltar', 'Italie', 'Saint-Marin', 'Vatican', 
+                       'Malte', 'Albanie', 'Bosnie-Herzegovine', 'Croatie', 'Grece', 'Macedoine', 'Montenegro', 'Serbie', 'Slovenie', 'Bulgarie', 
+                       'Autriche', 'Suisse')) THEN
+      delete from lpoisse.clientses@linkES where code_client = :old.code_client;
+    
+    ELSIF (:old.pays in  ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil',
+                          'Canada', 'Chili', 'Colombie','Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique',
+                          'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti','Honduras', 'Jamaique',
+                          'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie',
+                          'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay',
+                          'Venezuela')) then
+        delete from clients_AM where code_client = :old.code_client;
+   ELSIF (:old.pays in ('Suede', 'Norvege', 'Danemark', 'Finlande', 'Belgique', 
+                        'Irlande', 'Pologne', 'Royaume-Uni', 'Allemagne', 'Islande', 'Luxembourg', 'Pays-Bas'))then
+         delete from cpottiez.clientsEN@tplink where code_client = :old.code_client;
+    else
+         delete from cpottiez.clientsOI@tplink where code_client= :old.code_client;
+    end if;
+  END IF;
+end;
