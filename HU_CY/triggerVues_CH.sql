@@ -87,15 +87,14 @@ FOR EACH ROW
       ELSIF (:NEW.pays IN
              ('Antigua-et-Barbuda', 'Argentine', 'Bahamas', 'Barbade', 'Belize', 'Bolivie', 'Bresil', 'Canada', 'Chili', 'Colombie', 'Costa Rica', 'Cuba', 'Republique dominicaine', 'Dominique', 'Equateur', 'Etats-Unis', 'Grenade', 'Guatemala', 'Guyana', 'Haiti', 'Honduras', 'Jamaique', 'Mexique', 'Nicaragua', 'Panama', 'Paraguay', 'Perou', 'Saint-Christophe-et-Nieves', 'Sainte-Lucie', 'Saint-Vincent-et-les Grenadines', 'Salvador', 'Suriname', 'Trinite-et-Tobago', 'Uruguay', 'Venezuela'))
         THEN
-          INSERT
-          INTO hcburca.stock_am@LinkToDBUS VALUES
-            (
-              :new.ref_produit,
-              :new.pays,
-              :new.unites_stock,
-              :new.unites_commandees,
-              :new.indisponible
-            );
+          UPDATE hcburca.stock_am@LinkToDBUS
+          SET ref_produit     = :new.ref_produit,
+            PAYS              = :NEW.PAYS,
+            UNITES_STOCK      = :new.UNITES_STOCK,
+            UNITES_COMMANDEES = :new.UNITES_COMMANDEES,
+            INDISPONIBLE      = :new.INDISPONIBLE
+          WHERE ref_produit = :old.ref_produit
+                AND pays = :old.PAYS;
       ELSE
         UPDATE STOCKOI
         SET ref_produit     = :new.ref_produit,
